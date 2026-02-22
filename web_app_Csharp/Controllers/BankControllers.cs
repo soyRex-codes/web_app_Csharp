@@ -13,15 +13,13 @@
  * to keep it as clean and minimal as possible, so we try to avoid
  * putting our business logic or data classes in here.
  * 
- =============================================================================================================================================================
+=============================================================================================================================================================
    initial api we will get is http://localhost:5000/api/Bank/debtors
 =============================================================================================================================================================
 */
 
 
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
 using web_app_Csharp.Models; // By adding using web_app_Csharp.Models;, our controller now has full access to the CheckingAccount class.
 
 
@@ -47,13 +45,12 @@ namespace web_app_Csharp.Controllers
       };
       
       //2. The Endpoint
-      //URL will be: GET /api/Bank/debtors
-      [HttpGet("debtors")]
+      [HttpGet("debtors")] //URL will be: http://localhost:5233/api/Bank/debtors
       public ActionResult<List<string>> GetDebtors()
       {
          //3. Our exact LINQ code!
          // // LINQ example 1:
-         var EmailAddress0FPeopleInDebt = _accounts.Where(a => a.Balance < 0).Select(a => a.EmailAddress).ToList();
+         var emailAddress0FPeopleInDebt = _accounts.Where(a => a.Balance < 0).Select(a => a.EmailAddress).ToList();
                // // LINQ Concept - help write less verbose code taking less space and better readability
                //
                // // In C# we use Lambda expression => to find the account with Balance >= 1000, which is better than writing 6 lines using a loop and if else.
@@ -78,14 +75,14 @@ namespace web_app_Csharp.Controllers
          
          //4. Enterprise Safety Check
          // what if No ONE is in debt? We shouldn't return broken screen.
-         if (EmailAddress0FPeopleInDebt.Count == 0)
+         if (emailAddress0FPeopleInDebt.Count == 0)
          {
             return NotFound("Good News, non is broke and no one is in debt as of today.");
          }
          
          //5. The 200 OK Response
          // This automatically turns your C# List into a JSON array for the web.
-         return Ok(EmailAddress0FPeopleInDebt);
+         return Ok(emailAddress0FPeopleInDebt);
       }
 
 // =============================================================================================================================================================
@@ -94,15 +91,13 @@ namespace web_app_Csharp.Controllers
 // =============================================================================================================================================================
          //2.1. The Endpoint for creating new account
 // =============================================================================================================================================================
-         //URL will be: GET /Bank/CheckingAccount
-         [HttpPost("CheckingAccount")] //[HttpPost] is used to Create new account, Deposit balance and Withdraw balance
-        // =============================================================================================================================================================
-         // URL for Create Account is POST /api/Bank/CheckingAccount
-        // =============================================================================================================================================================
-         // ASP.NET fills these data fro account from the JSON body
+         //URL will be: http://localhost:5233/api/Bank/CheckingAccount
+         [HttpPost("CheckingAccount")] //[HttpPost] is used to Create new CheckingAccount.
+        // ===========================================================================================================================================================
+         // ASP.NET fills these data for account from the JSON body
          // ActionResult<...> must be a data type (a class/model) — it describes what kind of data you're returning.
          // Here CheckingAccount is the data we are returning.
-         public ActionResult<CheckingAccount> CreateAccount([FromBody] CheckingAccount newAccount) //ASP.NET fill the dat such as Owner name, Balance, and Email addsress automatically from the client request.         
+         public ActionResult<CheckingAccount> CreateAccount([FromBody] CheckingAccount newAccount) //ASP.NET fill the dat such as Owner name, Balance, and Email address automatically from the client request.         
          {/*
             hardcoding "Sam" means every call creates the same person. In a real API,
             the client sends the data. ASP.NET can do this automatically using a parameter.
@@ -110,16 +105,15 @@ namespace web_app_Csharp.Controllers
                // because ASP.NET read the JSON that the client sent!
             */
             _accounts.Add(newAccount);
-            return Ok("Account Created Successfully");
+            return Ok($"Account Created Successfully: {newAccount}");
          }
 // =============================================================================================================================================================         
          //2.2. The Endpoint for deposit
 // =============================================================================================================================================================         
-         //URL will be: GET /Bank/deposit
          [HttpPost("deposit")] //deposit is Route name While Deposite is method name that performs all the operations
          //[HttpPost] is used to Create make edits to the account, Deposit balance and Withdraw balance
-         // URL for Depoite is POST /api/Bank/deposit?owner=Elon&amount=500
-         public ActionResult Deposit(string owner, decimal amount) // owner is lowecase/camelCase because it's a PARAMETER  //ASP.NET fill this automatically from the client request.
+         // URL for deposite endpoint is POST /Bank/deposit?owner=Elon&amount=500
+         public ActionResult Deposit(string owner, decimal amount) // owner is lowercase/camelCase because it's a PARAMETER  //ASP.NET fill this automatically from the client request.
          {
             //step1: Step 1: Client sends ?owner=Elon&amount=500 in URL or via react frontend, first we find the owner of the account in our database
             // using LINQ method
@@ -137,10 +131,9 @@ namespace web_app_Csharp.Controllers
 // =============================================================================================================================================================
          //2.3. The Endpoint for Withdraw
 // =============================================================================================================================================================         
-         //URL will be: GET /Bank/Withdraw
          [HttpPost("withdraw_funds")] // withdraw_Funds with Http is a Route name while Withdraw is Method name that perfoms all the operation on the amount receives.
          //[HttpPost] is used to Create make edits to the account, Deposit balance and Withdraw balance
-         // URL for Withdraw is POST /api/Bank/withdraw?owner=Elon&amount=200
+         //URL will be: http://localhost:5233/api/Bank/withdraw_funds?owner=Elon&amount=200
          public ActionResult Withdraw(string owner, decimal amount) // owner is lowecase/camelCase because it's a PARAMETER.
          {
             //step1: Step 1: Client sends ?owner=Elon&amount=500 in URL or via react frontend, first we find the owner of the account in our database
@@ -151,8 +144,8 @@ namespace web_app_Csharp.Controllers
             {
                return NotFound("Account Not Found"); //If we ever reach return , that moment method stops execution and nothing else runs after this.
             }
-            // why I didn't use else: because else is not necessary here as in C#, if the if statement was true than, the method will retrun something early and the moment there is a retrun,
-            // the method stops execution, so we have passed if statement and reach to this statemnt, that means if was false and we have found an account to make an wothdrawl from.
+            // why I didn't use else: because else is not necessary here as in C#, if the statement was true, then, the method will retrun something early and the moment there is a retrun,
+            // the method stops execution, so we have passed if statement and reach to this statement, that means if it was false we have found an account to make a withdrawal from.
             account.Withdraw(amount);
             return Ok("withdraw Successful");
          }
@@ -161,7 +154,7 @@ namespace web_app_Csharp.Controllers
 // =============================================================================================================================================================         
  
          [HttpGet("CheckingAccount")] //HttpGet is used to  read data
-         //URL for get all account Owners is GET /api/Bank/accounts
+         //URL for get all account Owners is http://localhost:5233/api/Bank/accounts
          public ActionResult<List<string>> GetAllOwners()
          {
             return Ok(_accounts.Select(a => a.Owner).ToList()); // we return OK because Without Ok(), the React app wouldn't reliably know if the request succeeded or failed. The status code is the universal signal that every client in the world understands.

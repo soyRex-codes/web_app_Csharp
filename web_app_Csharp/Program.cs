@@ -24,7 +24,6 @@ Level,Topic,The Real-World Skill
  * putting our business logic or data classes in here.
  */
 
-
 // See https://aka.ms/new-console-template for more information
  
 //ASP.NET Core setup code 
@@ -34,8 +33,19 @@ var builder = WebApplication.CreateBuilder(args);
 // 2. Tell the builder we are using controllers to handle web requests
 builder.Services.AddControllers();
 
+// 2.1
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 // 3. Build the app
 var app = builder.Build();
+
+// 4.1 : This turns on the Swagger UI in Development mode
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // 4. Tell the app to map incoming URLs to our Controllers
 app.MapControllers();

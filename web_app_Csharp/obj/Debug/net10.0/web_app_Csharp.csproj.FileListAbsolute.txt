@@ -31,3 +31,7 @@
 /Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/obj/Debug/net10.0/web_app_Csharp.pdb
 /Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/obj/Debug/net10.0/web_app_Csharp.genruntimeconfig.cache
 /Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/obj/Debug/net10.0/ref/web_app_Csharp.dll
+/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/obj/Debug/net10.0/web_app_Csharp.sourcelink.json
+/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll

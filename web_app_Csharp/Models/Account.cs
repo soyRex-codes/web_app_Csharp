@@ -84,8 +84,8 @@ namespace web_app_Csharp.Models
    {
       // It inherits everything from base/parent class SecureAccount
       //adding the properties our LINQ relies on such as Owner and email address
-      public string Owner { get; set; } // Owner is Uppercase/PascalCase because it's a PROPERTY
-      public string EmailAddress { get; set; }
+      public string? Owner { get; set; } // Owner is Uppercase/PascalCase because it's a PROPERTY
+      public string? EmailAddress { get; set; }
    }
 
    public class SavingAccount : SecureAccount
