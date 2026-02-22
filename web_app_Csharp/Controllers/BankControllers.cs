@@ -20,6 +20,7 @@
 
 
 using Microsoft.AspNetCore.Mvc;
+using web_app_Csharp.Data;
 using web_app_Csharp.Models; // By adding using web_app_Csharp.Models;, our controller now has full access to the CheckingAccount class.
 
 
@@ -32,25 +33,28 @@ namespace web_app_Csharp.Controllers
     
    [Route("api/[controller]")] // This makes the base URL: api/Bank/debtors
    public class BankController : ControllerBase
-   {
-      //1. Our fake "Database" living in memory
-      // // Lis of all bank account we have in the bank at this moment
-      private static List<CheckingAccount> _accounts = new List<CheckingAccount>
-      {
-         new CheckingAccount { Owner = "Elon", Balance = 100000, EmailAddress = "elon123@gmail.com" },
-         new CheckingAccount { Owner = "Max", Balance = 50000, EmailAddress = "Max123@gmail123.com" },
-         new CheckingAccount { Owner = "bejos", Balance = 50, EmailAddress = "bejos@gmail123.com" },
-         new CheckingAccount { Owner = "Cliff", Balance = 20000, EmailAddress = "cliff123@gmail.com" },
-         new CheckingAccount { Owner = "Bliff", Balance = -20000, EmailAddress = "bliff123@gmail.com" }
-      };
+   { 
       
+      //===========================================================================================================================================================
+     // 1. Dependency Injection Constructor
+     // 1.1  CreatING a private field to hold the database connection, MAKING IT 'readOnly' so we don't accidentally overwrite it.
+     private readonly BankContext _context;
+     
+     //1.2 The Constructor (Dependency Injection)
+     //When ASP.NET creates this controller, it automatically passes in the BankContext.
+     public BankController(BankContext context)
+     {
+        _context = context;
+     }
+     //===========================================================================================================================================================
+         
       //2. The Endpoint
       [HttpGet("debtors")] //URL will be: http://localhost:5233/api/Bank/debtors
       public ActionResult<List<string>> GetDebtors()
       {
          //3. Our exact LINQ code!
          // // LINQ example 1:
-         var emailAddress0FPeopleInDebt = _accounts.Where(a => a.Balance < 0).Select(a => a.EmailAddress).ToList();
+         var emailAddress0FPeopleInDebt = _context.CheckingAccounts.Where(a => a.Balance < 0).Select(a => a.EmailAddress).ToList();
                // // LINQ Concept - help write less verbose code taking less space and better readability
                //
                // // In C# we use Lambda expression => to find the account with Balance >= 1000, which is better than writing 6 lines using a loop and if else.
@@ -101,10 +105,14 @@ namespace web_app_Csharp.Controllers
          {/*
             hardcoding "Sam" means every call creates the same person. In a real API,
             the client sends the data. ASP.NET can do this automatically using a parameter.
-               // newAccount is ALREADY filled with Owner, Balance, EmailAddress
+               // newAccount is ALREADY filled with Id, Owner, Balance, EmailAddress, account type via Discriminator
                // because ASP.NET read the JSON that the client sent!
             */
-            _accounts.Add(newAccount);
+            _context.CheckingAccounts.Add(newAccount); //1. Added the Account to the EF Core tracking memory
+            _context.SaveChanges();                   //2. Commit the transaction to the hard drive!
+            
+            // Because EF Core handles the Auto-Increment ID, 
+            // 'newAccount' now magically has its real database ID attached to it!
             return Ok($"Account Created Successfully: {newAccount}");
          }
 // =============================================================================================================================================================         
@@ -117,7 +125,7 @@ namespace web_app_Csharp.Controllers
          {
             //step1: Step 1: Client sends ?owner=Elon&amount=500 in URL or via react frontend, first we find the owner of the account in our database
             // using LINQ method
-            var account = _accounts.FirstOrDefault(a=> a.Owner == owner); //FirstOrDefault is used to find the first account that matches the given condition. If no account is found, it returns null.
+            var account = _context.CheckingAccounts.FirstOrDefault(a=> a.Owner == owner); //FirstOrDefault is used to find the first account that matches the given condition. If no account is found, it returns null.
             // step2: we check if the owner exists, great we move to this account.Deposit(amount); if not, we return and stop execution.
             if(account == null)
             {
@@ -126,6 +134,7 @@ namespace web_app_Csharp.Controllers
             // why I didn't use else: because else is not necessary here as in C#, if the if statement was true than, the method will retrun something early and the moment there is a retrun,
             // the method stops execution, so we have passed if statement and reach to this statemnt, that means if was false and we have found an account to make an wothdrawl from.
             account.Deposit(amount);
+            _context.SaveChanges();
             return Ok("Deposit Successful");
          }
 // =============================================================================================================================================================
@@ -138,7 +147,7 @@ namespace web_app_Csharp.Controllers
          {
             //step1: Step 1: Client sends ?owner=Elon&amount=500 in URL or via react frontend, first we find the owner of the account in our database
             // using LINQ method
-            var account = _accounts.FirstOrDefault(a=> a.Owner == owner); //FirstOrDefault is used to find the first account that matches the given condition. If no account is found, it returns null.
+            var account = _context.CheckingAccounts.FirstOrDefault(a=> a.Owner == owner); //FirstOrDefault is used to find the first account that matches the given condition. If no account is found, it returns null.
             // step2: we check if the owner exists
             if(account == null)
             {
@@ -147,6 +156,7 @@ namespace web_app_Csharp.Controllers
             // why I didn't use else: because else is not necessary here as in C#, if the statement was true, then, the method will retrun something early and the moment there is a retrun,
             // the method stops execution, so we have passed if statement and reach to this statement, that means if it was false we have found an account to make a withdrawal from.
             account.Withdraw(amount);
+            _context.SaveChanges();
             return Ok("withdraw Successful");
          }
 // =============================================================================================================================================================         
@@ -157,7 +167,8 @@ namespace web_app_Csharp.Controllers
          //URL for get all account Owners is http://localhost:5233/api/Bank/accounts
          public ActionResult<List<string>> GetAllOwners()
          {
-            return Ok(_accounts.Select(a => a.Owner).ToList()); // we return OK because Without Ok(), the React app wouldn't reliably know if the request succeeded or failed. The status code is the universal signal that every client in the world understands.
+            var owners = _context.CheckingAccounts.Select(a => a.Owner).ToList(); // we return OK because Without Ok(), the React app wouldn't reliably know if the request succeeded or failed. The status code is the universal signal that every client in the world understands.
+            return Ok(owners);
          }
    }
 }

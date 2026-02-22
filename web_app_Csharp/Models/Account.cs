@@ -14,6 +14,8 @@ namespace web_app_Csharp.Models
    //  */
    public abstract class SecureAccount //By making SecureAccount abstract, you have forced every developer on your team to be specific. They must create a CheckingAccount or SavingsAccount. They cannot create a generic, half-finished object.
    {
+      public int Id { get; set; } // This is our SecureAccount PrimaryKey, Essential for our database
+      
       /*
        * Why this matters for your Interview
          If an interviewer asks: "Why didn't you just make Balance public?"
@@ -100,8 +102,8 @@ namespace web_app_Csharp.Models
       public override void Deposit(decimal amount)
       {
          decimal bonus = (amount / 100) * 10;
-         decimal total_Deposit = amount + bonus; // Balance was changed to protected so it can be accessed in child class.
-         base.Deposit(total_Deposit); // 3. THE MAGIC KEYWORD: "base" , We call the Parent's method to do the actual work. This ensures all the "Safety Checks" (like amount < 0) , in the parent class still run!
+         decimal totalDeposit = amount + bonus; // Balance was changed to protected so it can be accessed in child class.
+         base.Deposit(totalDeposit); // 3. THE MAGIC KEYWORD: "base" , We call the Parent's method to do the actual work. This ensures all the "Safety Checks" (like amount < 0) , in the parent class still run!
          /*
           * Why base.Deposit() wins interviews
             If an interviewer asks: "Why did you call base.Deposit() instead of just adding it to Balance yourself?"

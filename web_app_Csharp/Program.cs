@@ -24,8 +24,11 @@ Level,Topic,The Real-World Skill
  * putting our business logic or data classes in here.
  */
 
-// See https://aka.ms/new-console-template for more information
- 
+//IMPORTS
+using Microsoft.EntityFrameworkCore;
+using web_app_Csharp.Data;
+
+
 //ASP.NET Core setup code 
 // 1. Create the builder
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +39,10 @@ builder.Services.AddControllers();
 // 2.1
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//2.2 // Telling the Building Manager/main entry point for the program that database exits, so it can run it everytime the server/program starts.
+//Translation: "Hey .NET, whenever a Controller/endpoint/api asks for a database, give them BankContext, and save all the data into a file named bank.db."
+builder.Services.AddDbContext<BankContext>(options =>options.UseSqlite("Data Source=bank.db"));
 
 // 3. Build the app
 var app = builder.Build();
