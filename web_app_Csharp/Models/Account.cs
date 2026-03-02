@@ -1,6 +1,7 @@
 // 3. Food Dishes
 // This is where our data structures like SecureAccount and CheckingAccount will live.
 // Models-> Account.cs are the ingredients/classes with logic
+using Microsoft.Extensions.Logging;
 
 namespace web_app_Csharp.Models
 {
@@ -31,7 +32,6 @@ namespace web_app_Csharp.Models
 
       public decimal GetBalance() // a public method that allows people to see the money but not touch it
       {
-         Console.WriteLine($"Your Balance is: {Balance}");
          return Balance;
       }
 
@@ -40,28 +40,24 @@ namespace web_app_Csharp.Models
       {
          if (amount < 0)
          {
-            Console.WriteLine("Error: invalid amount");
-            return; //stop execution immediately
+            throw new InvalidOperationException($"Can't deposite negative amount: {amount}");
+            // throw stops the execution immediately same as return
          }
          Balance += amount; // THE LOGIC: Add input (amount) to storage (Balance).
          
-         Console.WriteLine($"Your new Balance is : {Balance}");
       }
 
       public virtual void Withdraw (decimal amount)
       {
          if (amount < 0)
          {
-            Console.WriteLine($"Invalid_amount: {amount}");
-            return;
+            throw new InvalidOperationException($"Can't withdraw negative amount: {amount}");
          }
          if (amount > Balance)
          {
-            Console.WriteLine($"Not enough Balance in your account: {amount}");
-            return;
+            throw new InvalidOperationException($"You do not have enough balance in your account, your current balance is {Balance}");
          }
          Balance -= amount;
-         Console.WriteLine($"Your new Balance is : {Balance}");
       }
    }
 
@@ -112,7 +108,6 @@ namespace web_app_Csharp.Models
             
             "Because of DRY (Don't Repeat Yourself). The Parent class already has validation logic (like checking for negative numbers). If I rewrite the logic here, I might introduce bugs. By calling base, I reuse the tested, safe logic of the Parent."
           */
-         Console.WriteLine($"Your employer matched: {bonus}");
       }
    }
 }

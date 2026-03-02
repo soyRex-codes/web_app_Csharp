@@ -6,7 +6,7 @@
 // the name of namespace from other files rather than the file name, that's hw c# works.
 
 /* Think of your web API like a restaurant 🍽️:
- * ASP.NET Core has a specific, industry-standard way of organizing these files
+ * ASP.NET Core has a specific, industry-standard way of organizing these files            
  * so that anyone looking at your project knows exactly where things are.
  * Program.cs is the building manager. It configures the server,
  * turns on the lights, and opens the front door. We usually want
@@ -38,13 +38,20 @@ namespace web_app_Csharp.Controllers
       //===========================================================================================================================================================
      // 1. Dependency Injection Constructor
      // 1.1  CreatING a private field to hold the database connection, MAKING IT 'readOnly' so we don't accidentally overwrite it.
+     // How would i modify these private fields and the constructor to ask the application for an ILogger<BankController> alongside BankContext?
+
+     // 1. Create the private readonly fields to store the tools
+     // private readonly ToolOne _toolOne; //this is sample pattern, we can use it for any class
      private readonly BankContext _context;
+     private readonly ILogger<BankController> _logger;
      
+     // 2. Ask for them in the constructor parameters
      //1.2 The Constructor (Dependency Injection)
      //When ASP.NET creates this controller, it automatically passes in the BankContext.
-     public BankController(BankContext context)
-     {
-        _context = context;
+     public BankController(BankContext context, ILogger<BankController> logger) //contructor and class is same thing, it is just a method that is called when an object is created.
+     { //ILogger<BankController> logger as parameter because it is a service that is used to log messages not just context because context is used to store data in database.
+        _context = context; //this is how we store the database connection in the private field.
+        _logger = logger; //this is how we store the logger in the private field.
      }
      //===========================================================================================================================================================
          
@@ -113,14 +120,15 @@ namespace web_app_Csharp.Controllers
             
             // Because EF Core handles the Auto-Increment ID, 
             // 'newAccount' now magically has its real database ID attached to it!
-            return Ok($"Account Created Successfully: {newAccount}");
+            _logger.LogInformation($"Account Created Successfully: {newAccount}");
+            return Ok();
          }
 // =============================================================================================================================================================         
          //2.2. The Endpoint for deposit
 // =============================================================================================================================================================         
-         [HttpPost("deposit")] //deposit is Route name While Deposite is method name that performs all the operations
+         [HttpPost("deposit")] //deposit is Route name While Deposit is method name that performs all the operations
          //[HttpPost] is used to Create make edits to the account, Deposit balance and Withdraw balance
-         // URL for deposite endpoint is POST /Bank/deposit?owner=Elon&amount=500
+         // URL for deposit endpoint is POST /Bank/deposit?owner=Elon&amount=500
          public ActionResult Deposit(string owner, decimal amount) // owner is lowercase/camelCase because it's a PARAMETER  //ASP.NET fill this automatically from the client request.
          {
             //step1: Step 1: Client sends ?owner=Elon&amount=500 in URL or via react frontend, first we find the owner of the account in our database
@@ -129,13 +137,15 @@ namespace web_app_Csharp.Controllers
             // step2: we check if the owner exists, great we move to this account.Deposit(amount); if not, we return and stop execution.
             if(account == null)
             {
+               _logger.LogWarning($"User: {owner} not found in database"); // logging the user who is not in database.
                return NotFound("Account Not Found");
             }
             // why I didn't use else: because else is not necessary here as in C#, if the if statement was true than, the method will retrun something early and the moment there is a retrun,
             // the method stops execution, so we have passed if statement and reach to this statemnt, that means if was false and we have found an account to make an wothdrawl from.
             account.Deposit(amount);
             _context.SaveChanges();
-            return Ok("Deposit Successful");
+            _logger.LogInformation($"Deposit Successful: {amount}");
+            return Ok();
          }
 // =============================================================================================================================================================
          //2.3. The Endpoint for Withdraw
@@ -151,13 +161,15 @@ namespace web_app_Csharp.Controllers
             // step2: we check if the owner exists
             if(account == null)
             {
+               _logger.LogWarning($"User: {owner} not found in database"); // logging the user who is not in database.
                return NotFound("Account Not Found"); //If we ever reach return , that moment method stops execution and nothing else runs after this.
             }
             // why I didn't use else: because else is not necessary here as in C#, if the statement was true, then, the method will retrun something early and the moment there is a retrun,
             // the method stops execution, so we have passed if statement and reach to this statement, that means if it was false we have found an account to make a withdrawal from.
             account.Withdraw(amount);
             _context.SaveChanges();
-            return Ok("withdraw Successful");
+            _logger.LogInformation($"Withdraw Successful: {amount}");
+            return Ok();
          }
 // =============================================================================================================================================================         
          //2.4. The Endpoint for reading data   
