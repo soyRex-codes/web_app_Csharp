@@ -36,32 +36,62 @@ namespace web_app_Csharp.Tests
 
     public class CheckingAccountTests2
     {
-        [Fact] // The [Fact] attribute tells the test runner: "Hey, run this method as a test!"
-        public void Deposite_negativeAmount_DoesNotChangeBalance()
+        [Fact]
+        public void Deposit_NegativeAmount_ThrowsInvalidOperationException()
         {
-            //1. ARRANGE: Lets Set up the scenario
+            // ARRANGE: Set up the scenario
             var account = new CheckingAccount
             {
                 Owner = "Test user2",
-                Balance = 1000m //$1000
+                Balance = 1000m
             };
-            decimal depositAmount = -500m; // where m is? In C#, m stands for Money (or decimal)
-            /*
-             * If we type 500.50 in C#, the compiler assumes it is a double (a standard floating-point number). But double is dangerous for financial applications because of how computers handle binary math.
-               
-               If we ask a computer to add 0.1 + 0.2 using double, it often results in 0.30000000000000004. If we do that millions of times in a bank, we lose actual dollars to rounding errors.
-               
-               By adding m (e.g., 500.50m), we force C# to use the decimal type, which uses base-10 math. It is perfectly precise.
-               
-               In a technical interview for a financial institution, using m instead of a standard decimal proves understanding of enterprise data integrity.
-             */
+            decimal depositAmount = -500m;
 
-            //2. ACT: EXECUTE the business logic
-            account.Deposit(depositAmount);
+            // ACT & ASSERT: Verify that depositing a negative amount throws
+            var exception = Assert.Throws<InvalidOperationException>(() => account.Deposit(depositAmount));
 
-            //3. Assert: Prove the outcome
-            // ASSert.EQUAL(EXPECTED VALUE< ACTUAL VALUE)
-            Assert.Equal(1000, account.Balance);
+            // Verify the exception message is meaningful
+            Assert.Contains("negative", exception.Message, StringComparison.OrdinalIgnoreCase);
+
+            // Verify the balance was NOT modified
+            Assert.Equal(1000m, account.Balance);
+        }
+    }
+
+    public class CheckingAccountTests3
+    {
+        [Fact]
+        public void Withdraw_MoreThanBalance_ThrowsInvalidOperationException()
+        {
+            // ARRANGE
+            var account = new CheckingAccount
+            {
+                Owner = "Test user3",
+                Balance = 100m
+            };
+
+            // ACT & ASSERT: Verify overdraft throws
+            var exception = Assert.Throws<InvalidOperationException>(() => account.Withdraw(500m));
+
+            Assert.Contains("balance", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(100m, account.Balance);
+        }
+
+        [Fact]
+        public void Withdraw_ValidAmount_DecreasesBalance()
+        {
+            // ARRANGE
+            var account = new CheckingAccount
+            {
+                Owner = "Test user4",
+                Balance = 1000m
+            };
+
+            // ACT
+            account.Withdraw(300m);
+
+            // ASSERT
+            Assert.Equal(700m, account.Balance);
         }
     }
 }
