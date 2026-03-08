@@ -1,0 +1,41 @@
+## .NET Core
+bin/
+obj/
+*.user
+*.userosscache
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+## IDE
+.idea/
+.vs/
+*.swp
+*~
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Database
+*.db
+*.db-shm
+*.db-wal
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+[Ll]og/
+
+## NuGet
+*.nupkg
+**/packages/*
+project.lock.json
+
+## Resolved implementation plan
+*.resolved
