@@ -103,74 +103,98 @@ namespace web_app_Csharp.Controllers
          //2.1. The Endpoint for creating new account
 // =============================================================================================================================================================
          //URL will be: http://localhost:5233/api/Bank/CheckingAccount
-         [HttpPost("CheckingAccount")] //[HttpPost] is used to Create new CheckingAccount.
-        // ===========================================================================================================================================================
-         // ASP.NET fills these data for account from the JSON body
-         // ActionResult<...> must be a data type (a class/model) — it describes what kind of data you're returning.
-         // Here CheckingAccount is the data we are returning.
-         public ActionResult<CheckingAccount> CreateAccount([FromBody] CheckingAccount newAccount) //ASP.NET fill the dat such as Owner name, Balance, and Email address automatically from the client request.         
-         {/*
-            hardcoding "Sam" means every call creates the same person. In a real API,
-            the client sends the data. ASP.NET can do this automatically using a parameter.
-               // newAccount is ALREADY filled with Id, Owner, Balance, EmailAddress, account type via Discriminator
-               // because ASP.NET read the JSON that the client sent!
-            */
-            _context.CheckingAccounts.Add(newAccount); //1. Added the Account to the EF Core tracking memory
-            _context.SaveChanges();                   //2. Commit the transaction to the hard drive!
+         [HttpPost("CheckingAccount")]
+         public ActionResult<CheckingAccount> CreateAccount([FromBody] CheckingAccount newAccount)
+         {
+            if (newAccount == null)
+            {
+               return BadRequest("Account data is required.");
+            }
+            if (string.IsNullOrWhiteSpace(newAccount.Owner))
+            {
+               return BadRequest("Owner name is required.");
+            }
+            if (string.IsNullOrWhiteSpace(newAccount.EmailAddress))
+            {
+               return BadRequest("Email address is required.");
+            }
+
+            _context.CheckingAccounts.Add(newAccount);
+            _context.SaveChanges();
             
-            // Because EF Core handles the Auto-Increment ID, 
-            // 'newAccount' now magically has its real database ID attached to it!
-            _logger.LogInformation($"Account Created Successfully: {newAccount}");
-            return Ok();
+            _logger.LogInformation("Account created successfully for {Owner}", newAccount.Owner);
+            return CreatedAtAction(nameof(GetAllOwners), new { id = newAccount.Id }, newAccount);
          }
 // =============================================================================================================================================================         
          //2.2. The Endpoint for deposit
 // =============================================================================================================================================================         
-         [HttpPost("deposit")] //deposit is Route name While Deposit is method name that performs all the operations
-         //[HttpPost] is used to Create make edits to the account, Deposit balance and Withdraw balance
-         // URL for deposit endpoint is POST /Bank/deposit?owner=Elon&amount=500
-         public ActionResult Deposit(string owner, decimal amount) // owner is lowercase/camelCase because it's a PARAMETER  //ASP.NET fill this automatically from the client request.
-         {
-            //step1: Step 1: Client sends ?owner=Elon&amount=500 in URL or via react frontend, first we find the owner of the account in our database
-            // using LINQ method
-            var account = _context.CheckingAccounts.FirstOrDefault(a=> a.Owner == owner); //FirstOrDefault is used to find the first account that matches the given condition. If no account is found, it returns null.
-            // step2: we check if the owner exists, great we move to this account.Deposit(amount); if not, we return and stop execution.
-            if(account == null)
-            {
-               _logger.LogWarning($"User: {owner} not found in database"); // logging the user who is not in database.
-               return NotFound("Account Not Found");
-            }
-            // why I didn't use else: because else is not necessary here as in C#, if the if statement was true than, the method will retrun something early and the moment there is a retrun,
-            // the method stops execution, so we have passed if statement and reach to this statemnt, that means if was false and we have found an account to make an wothdrawl from.
-            account.Deposit(amount);
-            _context.SaveChanges();
-            _logger.LogInformation($"Deposit Successful: {amount}");
-            return Ok();
-         }
+         [HttpPost("deposit")]
+          public ActionResult Deposit(string owner, decimal amount)
+          {
+             if (string.IsNullOrWhiteSpace(owner))
+             {
+                return BadRequest("Owner name is required.");
+             }
+             if (amount <= 0)
+             {
+                return BadRequest("Deposit amount must be greater than zero.");
+             }
+
+             var account = _context.CheckingAccounts.FirstOrDefault(a => a.Owner == owner);
+             if (account == null)
+             {
+                _logger.LogWarning("Deposit failed: user {Owner} not found", owner);
+                return NotFound($"Account not found for owner: {owner}");
+             }
+
+             try
+             {
+                account.Deposit(amount);
+                _context.SaveChanges();
+                _logger.LogInformation("Deposit of {Amount} successful for {Owner}", amount, owner);
+                return Ok(new { message = "Deposit successful", owner, amount, newBalance = account.Balance });
+             }
+             catch (InvalidOperationException ex)
+             {
+                _logger.LogWarning("Deposit rejected for {Owner}: {Message}", owner, ex.Message);
+                return BadRequest(ex.Message);
+             }
+          }
 // =============================================================================================================================================================
          //2.3. The Endpoint for Withdraw
 // =============================================================================================================================================================         
-         [HttpPost("withdraw_funds")] // withdraw_Funds with Http is a Route name while Withdraw is Method name that perfoms all the operation on the amount receives.
-         //[HttpPost] is used to Create make edits to the account, Deposit balance and Withdraw balance
-         //URL will be: http://localhost:5233/api/Bank/withdraw_funds?owner=Elon&amount=200
-         public ActionResult Withdraw(string owner, decimal amount) // owner is lowecase/camelCase because it's a PARAMETER.
-         {
-            //step1: Step 1: Client sends ?owner=Elon&amount=500 in URL or via react frontend, first we find the owner of the account in our database
-            // using LINQ method
-            var account = _context.CheckingAccounts.FirstOrDefault(a=> a.Owner == owner); //FirstOrDefault is used to find the first account that matches the given condition. If no account is found, it returns null.
-            // step2: we check if the owner exists
-            if(account == null)
-            {
-               _logger.LogWarning($"User: {owner} not found in database"); // logging the user who is not in database.
-               return NotFound("Account Not Found"); //If we ever reach return , that moment method stops execution and nothing else runs after this.
-            }
-            // why I didn't use else: because else is not necessary here as in C#, if the statement was true, then, the method will retrun something early and the moment there is a retrun,
-            // the method stops execution, so we have passed if statement and reach to this statement, that means if it was false we have found an account to make a withdrawal from.
-            account.Withdraw(amount);
-            _context.SaveChanges();
-            _logger.LogInformation($"Withdraw Successful: {amount}");
-            return Ok();
-         }
+         [HttpPost("withdraw_funds")]
+          public ActionResult Withdraw(string owner, decimal amount)
+          {
+             if (string.IsNullOrWhiteSpace(owner))
+             {
+                return BadRequest("Owner name is required.");
+             }
+             if (amount <= 0)
+             {
+                return BadRequest("Withdrawal amount must be greater than zero.");
+             }
+
+             var account = _context.CheckingAccounts.FirstOrDefault(a => a.Owner == owner);
+             if (account == null)
+             {
+                _logger.LogWarning("Withdrawal failed: user {Owner} not found", owner);
+                return NotFound($"Account not found for owner: {owner}");
+             }
+
+             try
+             {
+                account.Withdraw(amount);
+                _context.SaveChanges();
+                _logger.LogInformation("Withdrawal of {Amount} successful for {Owner}", amount, owner);
+                return Ok(new { message = "Withdrawal successful", owner, amount, newBalance = account.Balance });
+             }
+             catch (InvalidOperationException ex)
+             {
+                _logger.LogWarning("Withdrawal rejected for {Owner}: {Message}", owner, ex.Message);
+                return BadRequest(ex.Message);
+             }
+          }
 // =============================================================================================================================================================         
          //2.4. The Endpoint for reading data   
 // =============================================================================================================================================================         
