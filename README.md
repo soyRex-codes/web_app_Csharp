@@ -12,7 +12,7 @@ A full-stack banking REST API built with **ASP.NET Core**, **Entity Framework Co
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 web_app_Csharp/
@@ -36,7 +36,7 @@ web_app_Csharp/
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -48,7 +48,7 @@ web_app_Csharp/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
@@ -79,18 +79,18 @@ docker compose up --build
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Unit tests are written with **xUnit** following the **Arrange-Act-Assert** pattern:
 
-- ✅ `Deposit_ValidAmount_IncreasesBalance`
-- ✅ `Deposit_NegativeAmount_ThrowsInvalidOperationException`
-- ✅ `Withdraw_MoreThanBalance_ThrowsInvalidOperationException`
-- ✅ `Withdraw_ValidAmount_DecreasesBalance`
+-  `Deposit_ValidAmount_IncreasesBalance`
+-  `Deposit_NegativeAmount_ThrowsInvalidOperationException`
+-  `Withdraw_MoreThanBalance_ThrowsInvalidOperationException`
+-  `Withdraw_ValidAmount_DecreasesBalance`
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -105,10 +105,10 @@ Unit tests are written with **xUnit** following the **Arrange-Act-Assert** patte
 
 ---
 
-## 📝 Future Enhancements
+## Future Enhancements
 
 - [ ] SQL Server integration for production
 - [ ] React + TypeScript frontend
 - [ ] JWT authentication & authorization
 - [ ] Transfer endpoint between accounts
-- [ ] Account balance history / transaction log
+- [ ] Account balance history/transaction log
