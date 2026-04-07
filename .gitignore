@@ -39,3 +39,10 @@ project.lock.json
 
 ## Resolved implementation plan
 *.resolved
+
+# Roadmap
+web_app_Csharp/RoadMap
+RoadMap
+
+# .gitignore
+.gitignore
