@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net10.0": {
       "Azure.Core/1.47.1": {
@@ -3158,11 +3158,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp-main/web_app_Csharp.Tests/web_app_Csharp.Tests.csproj",
+      "projectUniqueName": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp.Tests/web_app_Csharp.Tests.csproj",
       "projectName": "web_app_Csharp.Tests",
-      "projectPath": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp-main/web_app_Csharp.Tests/web_app_Csharp.Tests.csproj",
+      "projectPath": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp.Tests/web_app_Csharp.Tests.csproj",
       "packagesPath": "/Users/rajkushwaha/.nuget/packages/",
-      "outputPath": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp-main/web_app_Csharp.Tests/obj/",
+      "outputPath": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp.Tests/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/rajkushwaha/.nuget/NuGet/NuGet.Config"
@@ -3175,11 +3175,10 @@
       },
       "frameworks": {
         "net10.0": {
-          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp-main/web_app_Csharp/web_app_Csharp.csproj": {
-              "projectPath": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp-main/web_app_Csharp/web_app_Csharp.csproj"
+            "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/web_app_Csharp.csproj": {
+              "projectPath": "/Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/web_app_Csharp.csproj"
             }
           }
         }
@@ -3194,11 +3193,10 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net10.0": {
-        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "Microsoft.NET.Test.Sdk": {
@@ -3238,7 +3236,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.102/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",
