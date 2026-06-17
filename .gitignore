@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# .NET build output
+bin/
+obj/
+
+# IDE/user-specific files
+.idea/
+*.DotSettings.user
+
+# Test results and coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Local database files
+*.db
+*.db-shm
+*.db-wal
+
+# Environment/local secrets
+.env
+appsettings.Development.local.json
