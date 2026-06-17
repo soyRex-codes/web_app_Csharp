@@ -1,0 +1,250 @@
+# Banking API — Final 2026 SWE Roadmap
+
+## Architecture Decisions
+
+| Decision | Choice | Why |
+|---|---|---|
+| Data access | EF Core `DbContext` directly (no Repository wrapper) | `DbContext` IS already a Unit of Work; `DbSet<T>` IS a Repository. Wrapping adds boilerplate, not value. |
+| API style | **Controllers + Minimal APIs** (learn both) | Controllers for complex endpoints; Minimal APIs for simple ones. Both are first-class in .NET 10. |
+| Database | **SQL Server Express** (upgrade from SQLite) | The natural C#/.NET database; free, production-realistic, what .NET hiring managers expect |
+| Orchestration | **Docker Compose → .NET Aspire** | Aspire auto-wires services and adds observability for free |
+| Testing | xUnit + FluentAssertions + WebApplicationFactory | Industry standard combo for .NET |
+| Frontend | React + TypeScript | Most in-demand full-stack combo |
+| Auth | ASP.NET Core Identity API Endpoints | Built-in, modern, no manual JWT code |
+
+---
+
+## Current Status
+
+| Done | In Progress | Not Started |
+|---|---|---|
+| ✅ OOP Models + Inheritance | 🟡 xUnit (2 tests) | ❌ Async/Await |
+| ✅ EF Core + SQLite + Migrations | 🟡 Dockerfile | ❌ Auth |
+| ✅ 5 CRUD Endpoints | | ❌ Logging / Error Handling |
+| ✅ Swagger UI | | ❌ SQL Server |
+| ✅ Dependency Injection | | ❌ Minimal APIs |
+| | | ❌ React Frontend |
+| | | ❌ .NET Aspire |
+
+---
+
+## Phase 1 — Clean Code & Production Quality
+
+> Make the existing code look like a professional wrote it.
+
+| Task | Skill Learned |
+|---|---|
+| Replace all `Console.WriteLine()` with `ILogger<T>` | Structured Logging |
+| Add Global Exception Middleware + `ProblemDetails` responses | Error Handling Pipeline |
+| Add `[Required]`, `[Range]`, `[EmailAddress]` to model properties | Data Validation |
+| Change [Balance](file:///Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/web_app_Csharp/Models/Account.cs#32-37) from field → property `{ get; set; }` | C# Conventions |
+| Create DTOs — don't expose DB models to API responses | DTO Pattern |
+| Move learning comments → `NOTES.md`, clean production code | Clean Code |
+
+---
+
+## Phase 2 — Async/Await
+
+> Every modern .NET app is async. Convert all synchronous code.
+
+| What Changes | Before → After |
+|---|---|
+| Controller return types | `ActionResult` → `async Task<ActionResult>` |
+| Save to DB | `SaveChanges()` → `await SaveChangesAsync()` |
+| Find account | `FirstOrDefault()` → `await FirstOrDefaultAsync()` |
+| Get list | `ToList()` → `await ToListAsync()` |
+
+```csharp
+// Before (blocks the thread while waiting for DB)
+public ActionResult Deposit(string owner, decimal amount)
+{
+    var account = _context.CheckingAccounts.FirstOrDefault(a => a.Owner == owner);
+    _context.SaveChanges();
+    return Ok("Done");
+}
+
+// After (frees the thread — handles 100x more concurrent requests)
+public async Task<ActionResult> Deposit(string owner, decimal amount)
+{
+    var account = await _context.CheckingAccounts.FirstOrDefaultAsync(a => a.Owner == owner);
+    await _context.SaveChangesAsync();
+    return Ok("Done");
+}
+```
+
+> **Interview Q**: "Why async?" → "It frees the thread while waiting for I/O, letting the server handle thousands of concurrent requests instead of blocking."
+
+---
+
+## Phase 3 — Complete Test Coverage
+
+> "Do you write tests?" — the #1 interview question.
+
+| Test Type | What to Test | Tools |
+|---|---|---|
+| **Unit Tests** (10+) | Deposit, Withdraw, edge cases, RetirementAccount bonus | xUnit + FluentAssertions |
+| **Controller Tests** | Mock `DbContext`, verify HTTP status codes | Moq |
+| **Integration Tests** | Real API endpoints with in-memory DB | WebApplicationFactory |
+
+**Target: 15+ tests** covering happy paths, error paths, and edge cases.
+
+```csharp
+// FluentAssertions — reads like English
+account.Balance.Should().Be(1500m);
+result.Should().BeOfType<NotFoundResult>();
+```
+
+---
+
+## Phase 4 — Authentication & Authorization
+
+> No bank lets anonymous users access accounts.
+
+| Task | Skill Learned |
+|---|---|
+| Add ASP.NET Core Identity | Built-in `/register`, `/login`, `/refresh` for free |
+| Add `User` model linked to accounts | One-to-many relationships |
+| Add `[Authorize]` to banking endpoints | Token-based auth |
+| Users can only access their own accounts | Claims-based authorization |
+
+> **Not** manual JWT generation — Identity API Endpoints handle all of that automatically in .NET 8+.
+
+---
+
+## Phase 5 — Transfers, Transaction History & Pagination
+
+> Real banking features that separate toy projects from impressive ones.
+
+| Task | Skill Learned |
+|---|---|
+| `POST /api/Bank/transfer` (atomic, both sides succeed or both fail) | EF Core Transactions |
+| `Transaction` model: Id, AccountId, Type, Amount, Timestamp | Audit Trail Design |
+| Auto-log every deposit, withdrawal, and transfer | Event tracking |
+| `GET /api/Bank/transactions?page=1&pageSize=20` | Pagination |
+| `GET /api/v2/Bank/accounts` | API Versioning |
+
+```csharp
+// Pagination — Skip/Take pattern
+var transactions = await _context.Transactions
+    .Where(t => t.AccountId == accountId)
+    .OrderByDescending(t => t.Timestamp)
+    .Skip((page - 1) * pageSize)
+    .Take(pageSize)
+    .ToListAsync();
+```
+
+---
+
+## Phase 6 — Minimal APIs + SQL Server
+
+> Learn the modern API style and upgrade to a production database.
+
+| Task | Skill Learned |
+|---|---|
+| Build 2-3 endpoints using Minimal APIs alongside controllers | Modern API style |
+| Upgrade SQLite → SQL Server Express (via `Microsoft.EntityFrameworkCore.SqlServer`) | Production database |
+| Add a new EF Core migration for SQL Server | Database migration |
+| Use connection string from [appsettings.json](file:///Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/appsettings.json) / environment variables | Configuration management |
+
+```csharp
+// Minimal API — same endpoint, zero controller boilerplate
+app.MapGet("/api/accounts/{id}", async (int id, BankContext db) =>
+{
+    var account = await db.CheckingAccounts.FindAsync(id);
+    return account is not null ? Results.Ok(account) : Results.NotFound();
+});
+```
+
+> **Interview Q**: "When would you use Minimal APIs vs Controllers?" → "Minimal APIs for simple, focused endpoints (microservices). Controllers for complex APIs with many endpoints, filters, and shared logic."
+
+---
+
+## Phase 7 — React + TypeScript Frontend
+
+> Proves you're full-stack.
+
+| Task | Skill Learned |
+|---|---|
+| Create React app with TypeScript (`npx create-vite@latest`) | Modern frontend tooling |
+| Login / Register pages → connect to Identity endpoints | Auth flow |
+| Dashboard: account list with balances | REST API integration |
+| Deposit / Withdraw / Transfer forms with validation | Form handling |
+| Transaction history with pagination controls | Data tables |
+| Configure CORS in [Program.cs](file:///Users/rajkushwaha/Desktop/develop/dotnet-projects/web_app_Csharp/Program.cs) | Cross-origin requests |
+
+---
+
+## Phase 8 — Docker, .NET Aspire, CI/CD & Azure
+
+> Ship it to the real world.
+
+| Task | Skill Learned |
+|---|---|
+| Multi-stage Dockerfile (build stage → tiny runtime image) | Container optimization |
+| Docker Compose: API + React + SQL Server | Multi-container orchestration |
+| **.NET Aspire** orchestration (auto-wires services + adds observability) | Cloud-native .NET |
+| GitHub Actions: build → test → Docker image on every push | CI/CD pipeline |
+| Deploy to **Azure App Service** (free tier) | Cloud deployment |
+| Professional README: architecture diagram, badges, screenshots | Documentation |
+
+> **.NET Aspire** is the 2024+ replacement for hand-written Docker Compose in .NET apps. It auto-discovers services, adds health checks, and provides a dashboard for distributed tracing.
+
+> **Why SQL Server Express?** It's the natural pair for C#/.NET, free, and what .NET job postings expect. EF Core abstracts the DB — switching to PostgreSQL later takes 5 minutes (just swap one NuGet package).
+
+---
+
+## Priority Ranking
+
+| # | Phase | Interview Impact |
+|---|---|---|
+| 🔴 1 | Clean Code + Logging | First thing reviewed on GitHub |
+| 🔴 2 | Async/Await | Asked in every .NET interview |
+| 🔴 3 | Tests (15+) | "Do you write tests?" |
+| 🟠 4 | Authentication | Every production app needs this |
+| 🟠 5 | Transactions + Pagination | Shows DB design maturity |
+| 🟡 6 | Minimal APIs + SQL Server | Shows modern .NET awareness |
+| 🟡 7 | React + TypeScript Frontend | Proves full-stack |
+| 🟡 8 | Docker + Aspire + CI/CD + Azure | DevOps + cloud polish |
+
+---
+
+## Modern C# to Use Throughout
+
+```csharp
+// Records — immutable DTOs (C# 9+)
+public record AccountResponse(int Id, string Owner, decimal Balance);
+
+// Primary Constructors — cleaner DI (C# 12+)
+public class BankController(BankContext context) : ControllerBase { }
+
+// Pattern Matching — elegant checks (C# 8+)
+return account switch
+{
+    null => NotFound(),
+    { Balance: < 0 } => BadRequest("Negative balance"),
+    _ => Ok(account)
+};
+
+// Nullable Reference Types (C# 8+)
+public string? EmailAddress { get; set; }
+```
+
+---
+
+## Resume Bullet Points (After All Phases)
+
+- **Built** a full-stack banking API with **ASP.NET Core 10**, **EF Core**, **SQL Server**, and **React/TypeScript**, featuring Identity-based auth, ACID-compliant fund transfers, and paginated transaction history
+- **Implemented** both Controllers and Minimal APIs with async/await, structured logging (Serilog), and ProblemDetails error handling following modern .NET 10 conventions
+- **Achieved 90%+ test coverage** with xUnit, FluentAssertions, Moq, and WebApplicationFactory across 15+ unit and integration tests
+- **Deployed** via .NET Aspire orchestration with multi-stage Docker builds, SQL Server, and automated CI/CD through GitHub Actions to Azure App Service
+
+---
+
+## Study Separately (Not in This Project)
+
+| Skill | Resource | Time Split |
+|---|---|---|
+| **DSA / LeetCode** | NeetCode 150, LeetCode 75 | 40% of study time |
+| **System Design** | ByteByteGo (YouTube), "Designing Data-Intensive Apps" | 20% of study time |
+| **Raw SQL** | LeetCode SQL 50 | Alongside EF Core work |
+| **Behavioral** | STAR method, prepare 10-15 stories | Before interviews |

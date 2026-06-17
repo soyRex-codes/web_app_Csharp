@@ -1,0 +1,7 @@
+﻿services:
+  web_app_csharp:
+    image: web_app_csharp
+    build:
+      context: .
+      dockerfile: web_app_Csharp/Dockerfile
+
