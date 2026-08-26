@@ -1,6 +1,35 @@
-@web_app_Csharp_HostAddress = http://localhost:5233
+@host = http://localhost:5000
 
-GET {{web_app_Csharp_HostAddress}}/weatherforecast/
+GET {{host}}/api/v1/accounts
 Accept: application/json
+
+###
+
+POST {{host}}/api/v1/accounts
+Content-Type: application/json
+
+{
+  "ownerId": "user-123",
+  "name": "Everyday Checking",
+  "type": "Checking"
+}
+
+###
+
+POST {{host}}/api/v1/accounts/1/deposits
+Content-Type: application/json
+
+{
+  "amount": 500.00
+}
+
+###
+
+POST {{host}}/api/v1/accounts/1/withdrawals
+Content-Type: application/json
+
+{
+  "amount": 125.00
+}
 
 ###
