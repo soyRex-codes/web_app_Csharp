@@ -5,6 +5,10 @@
 bin/
 obj/
 
+# Guard against Windows-style build paths accidentally copied onto Unix systems.
+**/bin\\*/
+**/obj\\*/
+
 # IDE/user-specific files
 .idea/
 *.DotSettings.user

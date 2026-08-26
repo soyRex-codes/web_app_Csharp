@@ -1,114 +1,146 @@
-# 🏦 BankAPI — ASP.NET Core Banking REST API
+# BankingApp
 
 [![.NET CI](https://github.com/soyRex-codes/web_app_Csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/soyRex-codes/web_app_Csharp/actions/workflows/dotnet.yml)
 
-![C#](https://img.shields.io/badge/C%23-10-blue?logo=csharp)
-![.NET](https://img.shields.io/badge/.NET-10.0-purple?logo=dotnet)
-![EF Core](https://img.shields.io/badge/EF%20Core-10-green?logo=nuget)
-![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+A portfolio banking API built with C# 14, .NET 10, ASP.NET Core Minimal APIs, Entity Framework Core, and SQL Server.
 
-A full-stack banking REST API built with **ASP.NET Core**, **Entity Framework Core**, and **SQLite**. Demonstrates OOP principles (Encapsulation, Inheritance, Polymorphism), LINQ queries, Dependency Injection, and structured logging.
+The current implementation focuses on a small, defensible account domain: account creation, deposits, withdrawals, persistence, consistent HTTP responses, and automated tests. Authentication, transfers, and transaction history will be added as separate reviewable features.
 
----
+## Current capabilities
+
+- Async Minimal API endpoints grouped under `/api/v1/accounts`
+- Encapsulated account balance with validated deposit and withdrawal operations
+- Checking and savings account types
+- SQL Server persistence through EF Core migrations
+- DTO-based API contracts that do not expose EF entities directly
+- RFC Problem Details responses for validation and business-rule failures
+- Structured logging through `ILogger`
+- OpenAPI document generation in development
+- xUnit domain tests
+- Docker Compose environment for the API and SQL Server
+- GitHub Actions build, test, dependency-audit, and container-build checks
 
 ## Architecture
 
+```text
+HTTP request
+    ↓
+Minimal API endpoint + request/response DTOs
+    ↓
+BankAccount domain behavior
+    ↓
+EF Core BankContext
+    ↓
+SQL Server
 ```
+
+The application is a modular monolith organized by feature. EF Core's `DbContext` is used directly as the unit of work; the project does not add a generic repository wrapper.
+
+```text
 web_app_Csharp/
-├── Controllers/
-│   └── BankControllers.cs      # REST API endpoints (CRUD operations)
-├── Models/
-│   └── Account.cs              # Domain models (SecureAccount → CheckingAccount, SavingAccount, RetirementAccount)
 ├── Data/
-│   └── BankContext.cs           # EF Core DbContext (Table-Per-Hierarchy inheritance)
-├── Migrations/                  # EF Core database migrations
-├── Program.cs                   # Application entry point & DI configuration
-├── Dockerfile                   # Container configuration
-└── appsettings.json             # App configuration
+│   ├── Configurations/
+│   ├── Migrations/
+│   └── BankContext.cs
+├── Features/
+│   └── Accounts/
+│       ├── AccountContracts.cs
+│       ├── AccountEndpoints.cs
+│       ├── AccountType.cs
+│       └── BankAccount.cs
+├── Program.cs
+└── Dockerfile
 ```
 
-### Design Patterns Used
-- **Repository Pattern** via EF Core `DbContext`
-- **Dependency Injection** for `BankContext` and `ILogger<T>`
-- **Table-Per-Hierarchy (TPH)** inheritance mapping — one table for all account types with a `Discriminator` column
-- **Template Method** via `virtual` Deposit/Withdraw overrides in `RetirementAccount`
-
----
-
-## API Endpoints
+## API
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/Bank/debtors` | Get email addresses of accounts with negative balance |
-| `GET` | `/api/Bank/CheckingAccount` | List all account owners |
-| `POST` | `/api/Bank/CheckingAccount` | Create a new checking account |
-| `POST` | `/api/Bank/deposit?owner=Name&amount=100` | Deposit funds into an account |
-| `POST` | `/api/Bank/withdraw_funds?owner=Name&amount=50` | Withdraw funds from an account |
+|---|---|---|
+| `GET` | `/api/v1/accounts` | List accounts |
+| `GET` | `/api/v1/accounts/{id}` | Retrieve one account |
+| `POST` | `/api/v1/accounts` | Create an account |
+| `POST` | `/api/v1/accounts/{id}/deposits` | Deposit funds |
+| `POST` | `/api/v1/accounts/{id}/withdrawals` | Withdraw funds |
 
----
+Example account request:
 
-## Getting Started
-
-### Prerequisites
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Docker](https://www.docker.com/) (optional, for containerized deployment)
-
-### Build & Run
-```bash
-# Clone the repository
-git clone https://github.com/soyRex-codes/web_app_Csharp.git
-cd web_app_Csharp
-
-# Restore dependencies and build
-dotnet build
-
-# Run the application (opens Swagger UI automatically)
-dotnet run --project web_app_Csharp
+```json
+{
+  "ownerId": "user-123",
+  "name": "Everyday Checking",
+  "type": "Checking"
+}
 ```
 
-### Run Tests
-```bash
-dotnet test --verbosity normal
-```
+The API currently uses an external-looking `ownerId` in preparation for ASP.NET Core Identity. Authorization is not implemented yet, so this version must not be treated as a production banking system.
 
-### Docker
+## Run with Docker Compose
+
+Prerequisites:
+
+- Docker Desktop
+- Docker Compose
+
+Create the local environment file and start both services:
+
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 
----
+The API is available at `http://localhost:8080`. Its development OpenAPI document is available at `http://localhost:8080/openapi/v1.json`.
 
-## Testing
+SQL Server runs through x64 emulation on Apple Silicon because Microsoft's SQL Server Linux image targets `linux/amd64`.
 
-Unit tests are written with **xUnit** following the **Arrange-Act-Assert** pattern:
+## Run from the .NET CLI
 
--  `Deposit_ValidAmount_IncreasesBalance`
--  `Deposit_NegativeAmount_ThrowsInvalidOperationException`
--  `Withdraw_MoreThanBalance_ThrowsInvalidOperationException`
--  `Withdraw_ValidAmount_DecreasesBalance`
+Start only SQL Server:
 
----
+```bash
+cp .env.example .env
+docker compose up -d sqlserver
+```
 
-## Tech Stack
+Configure the local connection string without committing credentials:
 
-| Layer | Technology |
-|-------|-----------|
-| **Language** | C# 10 |
-| **Framework** | ASP.NET Core (.NET 10) |
-| **ORM** | Entity Framework Core 10 |
-| **Database** | SQLite (swappable to SQL Server) |
-| **API Docs** | Swagger / OpenAPI |
-| **Testing** | xUnit |
-| **CI/CD** | GitHub Actions |
-| **Containerization** | Docker |
+```bash
+dotnet user-secrets set \
+  --project web_app_Csharp \
+  "ConnectionStrings:BankDatabase" \
+  "Server=localhost,1433;Database=BankingApp;User Id=sa;Password=ChangeThisLocalPassword!123;Encrypt=True;TrustServerCertificate=True"
+```
 
----
+Restore tools and run the API:
 
-## Future Enhancements
+```bash
+dotnet tool restore
+dotnet run --project web_app_Csharp
+```
 
-- [ ] SQL Server integration for production
-- [ ] React + TypeScript frontend
-- [ ] JWT authentication & authorization
-- [ ] Transfer endpoint between accounts
-- [ ] Account balance history/transaction log
+Development startup applies pending EF Core migrations automatically. Production deployments should apply migrations as a separate deployment step.
+
+## Test and inspect dependencies
+
+```bash
+dotnet test web_app_Csharp.sln
+dotnet package list \
+  --project web_app_Csharp/web_app_Csharp.csproj \
+  --vulnerable \
+  --include-transitive
+```
+
+## Deliberate scope
+
+- Monetary values use SQL Server `decimal(18,2)` and the domain rejects fractional cents.
+- The application supports USD-denominated balances only for now.
+- Account type is stored as a readable string in SQL Server.
+- `OwnerId` is indexed and sized for a future ASP.NET Core Identity relationship.
+- Automatic migrations are limited to the development environment.
+
+## Planned features
+
+- ASP.NET Core Identity and policy-based account ownership
+- Transfers with atomic EF Core transactions
+- Immutable transaction history
+- API integration tests and measured coverage reporting
+- Production deployment after the application security model is complete
