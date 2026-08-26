@@ -21,7 +21,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using web_app_Csharp.Data;
-using web_app_Csharp.Models; // By adding using web_app_Csharp.Models;, our controller now has full access to the CheckingAccount class.
+using web_app_Csharp.Features.Accounts; // By adding using web_app_Csharp.Models;, our controller now has full access to the CheckingAccount class.
 
 
 namespace web_app_Csharp.Controllers

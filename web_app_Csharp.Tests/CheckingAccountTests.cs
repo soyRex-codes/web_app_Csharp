@@ -7,8 +7,8 @@
  */
 
 using Microsoft.EntityFrameworkCore;
+using web_app_Csharp.Features.Accounts;
 using Xunit;
-using web_app_Csharp.Models;
 
 namespace web_app_Csharp.Tests
 {
@@ -21,12 +21,10 @@ namespace web_app_Csharp.Tests
             var account = new CheckingAccount
             {
                 Owner = "Test user1",
-                Balance = 1000m
             };
-            decimal depositAmount = 500m; // where m is? In C#, m stands for Money (or decimal)
 
             //2. ACT: EXECUTE the business logic
-            account.Deposit(depositAmount);
+            account.Deposit(500m); // where m is? In C#, m stands for Money (or decimal)
 
             //3. Assert: Prove the outcome
             // ASSert.EQUAL(EXPECTED VALUE< ACTUAL VALUE)
@@ -43,12 +41,10 @@ namespace web_app_Csharp.Tests
             var account = new CheckingAccount
             {
                 Owner = "Test user2",
-                Balance = 1000m
             };
-            decimal depositAmount = -500m;
 
             // ACT & ASSERT: Verify that depositing a negative amount throws
-            var exception = Assert.Throws<InvalidOperationException>(() => account.Deposit(depositAmount));
+            var exception = Assert.Throws<InvalidOperationException>(() => account.Deposit(-500m));
 
             // Verify the exception message is meaningful
             Assert.Contains("negative", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -67,9 +63,10 @@ namespace web_app_Csharp.Tests
             var account = new CheckingAccount
             {
                 Owner = "Test user3",
-                Balance = 100m
             };
 
+            account.Deposit(100m);
+            
             // ACT & ASSERT: Verify overdraft throws
             var exception = Assert.Throws<InvalidOperationException>(() => account.Withdraw(500m));
 
@@ -84,10 +81,8 @@ namespace web_app_Csharp.Tests
             var account = new CheckingAccount
             {
                 Owner = "Test user4",
-                Balance = 1000m
             };
-
-            // ACT
+            account.Deposit(1000m);
             account.Withdraw(300m);
 
             // ASSERT

@@ -3,13 +3,13 @@
 // Models-> Account.cs are the ingredients/classes with logic
 using Microsoft.Extensions.Logging;
 
-namespace web_app_Csharp.Models
+namespace web_app_Csharp.Features.Accounts
 {
-   //     var myAccount = new SecureAccount(); // Always keep this code to the top level as C# read scode form top to bottom and if this code moves to bottom, compiler gets confused and spits random error.
+   //     var myAccount = new SecureAccount(); // Always keep this code to the top level as C# reads code form top to bottom and if this code moves to bottom, compiler gets confused and spits random error.
    //
    // /* 1. Encapsulation - Hiding secret data with private methods
    //  *
-   //  * 1. I want you to write a class called SecureAccount in your IDE (or here). It should have a Private field for Balance.
+   //  * 1. write a class called SecureAccount. It should have a Private field for Balance.
    //          It should have a Public method GetBalance() that allows people to see the money but not touch it.
    //             It should have a Deposit(decimal amount) method that only adds money if the amount is positive.
    //  */
@@ -27,8 +27,8 @@ namespace web_app_Csharp.Models
                         I force them to use my Deposit() method, which contains the Validation Logic to ensure the data stays safe."
        */
       //changed protected decimal Balance to public decimal Balance, so it can be accessed by ASP.NET web Api.
-      public decimal Balance; //Balance was changed from private to protected so children can touch and use it.
-      // We use the underscore "_" to signal "This is private so no one alters it apart from the owner of the class".
+      public decimal Balance { get; private set; } // Public getter for balance: controllers and clients can read the balance.
+      // Private setter: outside code cannot bypass the business rules.
 
       public decimal GetBalance() // a public method that allows people to see the money but not touch it
       {

@@ -3,7 +3,7 @@
  */
 
 using Microsoft.EntityFrameworkCore;
-using web_app_Csharp.Models;
+using web_app_Csharp.Features.Accounts;
 
 namespace web_app_Csharp.Data
 {
