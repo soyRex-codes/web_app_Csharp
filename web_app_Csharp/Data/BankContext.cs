@@ -11,6 +11,7 @@ public sealed class BankContext(DbContextOptions<BankContext> options) : Identit
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BankContext).Assembly);
     }
 }
