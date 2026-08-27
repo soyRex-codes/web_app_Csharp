@@ -13,6 +13,7 @@ public static class AccountEndpoints
 
         group.MapGet("", GetAccounts);
         group.MapGet("/{id:int}", GetAccount);
+        group.MapGet("/{id:int}/transactions", GetTransactions);
         group.MapPost("", CreateAccount);
         group.MapPost("/{id:int}/deposits", Deposit);
         group.MapPost("/{id:int}/withdrawals", Withdraw);
@@ -50,6 +51,33 @@ public static class AccountEndpoints
         return account is null
             ? TypedResults.NotFound()
             : TypedResults.Ok(AccountResponse.FromEntity(account));
+    }
+
+    private static async Task<Results<Ok<List<AccountTransactionResponse>>, NotFound>> GetTransactions(
+        int id,
+        BankContext context,
+        CancellationToken cancellationToken)
+    {
+        var accountExists = await context.Accounts.AnyAsync(account => account.Id == id, cancellationToken);
+        if (!accountExists)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var transactions = await context.AccountTransactions
+            .AsNoTracking()
+            .Where(transaction => transaction.AccountId == id)
+            .OrderByDescending(transaction => transaction.OccurredAtUtc)
+            .ThenByDescending(transaction => transaction.Id)
+            .Select(transaction => new AccountTransactionResponse(
+                transaction.Id,
+                transaction.Type,
+                transaction.Amount,
+                transaction.BalanceAfter,
+                transaction.OccurredAtUtc))
+            .ToListAsync(cancellationToken);
+
+        return TypedResults.Ok(transactions);
     }
 
     private static async Task<Results<Created<AccountResponse>, ValidationProblem>> CreateAccount(
@@ -103,6 +131,13 @@ public static class AccountEndpoints
             return ValidationProblem(exception);
         }
 
+        context.AccountTransactions.Add(new AccountTransaction(
+            account.Id,
+            AccountTransactionType.Deposit,
+            request.Amount,
+            account.Balance,
+            DateTime.UtcNow));
+
         await context.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
@@ -141,6 +176,13 @@ public static class AccountEndpoints
                 detail: "The account has insufficient funds.",
                 statusCode: StatusCodes.Status409Conflict);
         }
+
+        context.AccountTransactions.Add(new AccountTransaction(
+            account.Id,
+            AccountTransactionType.Withdrawal,
+            request.Amount,
+            account.Balance,
+            DateTime.UtcNow));
 
         await context.SaveChangesAsync(cancellationToken);
 

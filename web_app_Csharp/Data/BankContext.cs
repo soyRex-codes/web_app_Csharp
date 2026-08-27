@@ -6,6 +6,7 @@ namespace web_app_Csharp.Data;
 public sealed class BankContext(DbContextOptions<BankContext> options) : DbContext(options)
 {
     public DbSet<BankAccount> Accounts => Set<BankAccount>();
+    public DbSet<AccountTransaction> AccountTransactions => Set<AccountTransaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
