@@ -7,6 +7,13 @@ public sealed record CreateAccountRequest(
 
 public sealed record AccountTransactionRequest(decimal Amount);
 
+public sealed record AccountTransactionResponse(
+    int Id,
+    AccountTransactionType Type,
+    decimal Amount,
+    decimal BalanceAfter,
+    DateTime OccurredAtUtc);
+
 public sealed record AccountResponse(
     int Id,
     string OwnerId,
