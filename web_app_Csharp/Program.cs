@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using web_app_Csharp.Data;
 using web_app_Csharp.Features.Accounts;
+using web_app_Csharp.Features.Transfers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapAccountEndpoints();
+app.MapTransferEndpoints();
 
 app.Run();
 
