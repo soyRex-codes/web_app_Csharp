@@ -27,7 +27,15 @@ builder.Services
 builder.Services
     .AddAuthentication(IdentityConstants.ApplicationScheme)
     .AddIdentityCookies();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/login";
+    options.AccessDeniedPath = "/access-denied";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
 builder.Services.AddAuthorization();
+builder.Services.AddRazorPages();
 builder.Services.AddOpenApi();
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -46,6 +54,7 @@ app.UseStatusCodePages(async statusCodeContext =>
     var response = statusCodeContext.HttpContext.Response;
     await Results.Problem(statusCode: response.StatusCode).ExecuteAsync(statusCodeContext.HttpContext);
 });
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -72,6 +81,7 @@ if (!app.Environment.IsEnvironment("Testing"))
 app.MapAccountEndpoints();
 app.MapTransferEndpoints();
 app.MapIdentityEndpoints();
+app.MapRazorPages();
 
 app.Run();
 

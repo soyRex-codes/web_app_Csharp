@@ -1,0 +1,18 @@
+@page "/"
+@{
+    ViewData["Title"] = "Banking API demo";
+}
+
+<section class="hero">
+    <p class="eyebrow">.NET 10 banking API</p>
+    <h1>A small banking application with real backend rules.</h1>
+    <p>Register, sign in, and view the accounts available to your Identity user.</p>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a class="button" asp-page="/Accounts/Index">View my accounts</a>
+    }
+    else
+    {
+        <a class="button" asp-page="/Register">Create an account</a>
+    }
+</section>

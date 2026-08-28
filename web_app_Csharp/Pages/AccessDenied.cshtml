@@ -1,0 +1,11 @@
+@page "/access-denied"
+@{
+    ViewData["Title"] = "Access denied";
+}
+
+<section class="form-panel" aria-labelledby="access-denied-title">
+    <p class="eyebrow">Authorization</p>
+    <h1 id="access-denied-title">You do not have access to this page.</h1>
+    <p>Use an account with the required role or return to your account dashboard.</p>
+    <a class="button" asp-page="/Accounts/Index">My accounts</a>
+</section>

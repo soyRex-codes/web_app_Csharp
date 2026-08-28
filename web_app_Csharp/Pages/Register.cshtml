@@ -1,0 +1,24 @@
+@page "/register"
+@{
+    ViewData["Title"] = "Register";
+}
+
+<section class="form-panel" aria-labelledby="register-title">
+    <p class="eyebrow">Get started</p>
+    <h1 id="register-title">Create your user account</h1>
+    <p>New users receive the Customer role.</p>
+
+    <form data-api-form data-api-endpoint="/api/v1/auth/register" data-success-redirect="/login?registered=true">
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" required />
+        </div>
+        <div class="form-error" data-form-error role="alert" hidden></div>
+        <button class="button" type="submit">Register</button>
+    </form>
+    <p class="secondary-action">Already registered? <a asp-page="/Login">Sign in</a>.</p>
+</section>

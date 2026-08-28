@@ -1,0 +1,28 @@
+@page "/login"
+@{
+    ViewData["Title"] = "Sign in";
+    var registered = Request.Query.ContainsKey("registered");
+}
+
+<section class="form-panel" aria-labelledby="login-title">
+    <p class="eyebrow">Welcome back</p>
+    <h1 id="login-title">Sign in</h1>
+    @if (registered)
+    {
+        <p class="success-message" role="status">Registration complete. You can sign in now.</p>
+    }
+
+    <form data-api-form data-api-endpoint="/api/v1/auth/login" data-success-redirect="/accounts">
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <div class="form-error" data-form-error role="alert" hidden></div>
+        <button class="button" type="submit">Sign in</button>
+    </form>
+    <p class="secondary-action">Need an account? <a asp-page="/Register">Register</a>.</p>
+</section>

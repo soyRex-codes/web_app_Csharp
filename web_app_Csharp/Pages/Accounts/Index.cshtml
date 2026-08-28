@@ -1,0 +1,27 @@
+@page "/accounts"
+@attribute [Authorize]
+@{
+    ViewData["Title"] = "My accounts";
+}
+
+<section class="content-panel" aria-labelledby="accounts-title">
+    <p class="eyebrow">Customer dashboard</p>
+    <h1 id="accounts-title">My accounts</h1>
+    <p>Your balances are loaded from the account API for the signed-in user.</p>
+
+    <div class="form-error" data-accounts-error role="alert" hidden></div>
+    <p class="empty-state" data-empty-state hidden>You do not have any accounts yet.</p>
+    <div class="table-wrapper">
+        <table data-accounts-table data-show-owner="false">
+            <caption class="visually-hidden">Your banking accounts</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Balance</th>
+                </tr>
+            </thead>
+            <tbody data-accounts-list></tbody>
+        </table>
+    </div>
+</section>
