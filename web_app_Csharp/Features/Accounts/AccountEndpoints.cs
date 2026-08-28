@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using web_app_Csharp.Data;
+using web_app_Csharp.Features.Identity;
 
 namespace web_app_Csharp.Features.Accounts;
 
@@ -9,7 +11,8 @@ public static class AccountEndpoints
     public static IEndpointRouteBuilder MapAccountEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1/accounts")
-            .WithTags("Accounts");
+            .WithTags("Accounts")
+            .RequireAuthorization();
 
         group.MapGet("", GetAccounts);
         group.MapGet("/{id:int}", GetAccount);
@@ -21,12 +24,24 @@ public static class AccountEndpoints
         return endpoints;
     }
 
-    private static async Task<Ok<List<AccountResponse>>> GetAccounts(
+    private static async Task<Results<Ok<List<AccountResponse>>, ForbidHttpResult>> GetAccounts(
         BankContext context,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
-        var accounts = await context.Accounts
-            .AsNoTracking()
+        IQueryable<BankAccount> query = context.Accounts.AsNoTracking();
+        if (!user.IsInRole(ApplicationRoles.Admin))
+        {
+            var userId = AccountAccess.GetUserId(user);
+            if (userId is null)
+            {
+                return TypedResults.Forbid();
+            }
+
+            query = query.Where(account => account.OwnerId == userId);
+        }
+
+        var accounts = await query
             .OrderBy(account => account.Id)
             .Select(account => new AccountResponse(
                 account.Id,
@@ -39,29 +54,43 @@ public static class AccountEndpoints
         return TypedResults.Ok(accounts);
     }
 
-    private static async Task<Results<Ok<AccountResponse>, NotFound>> GetAccount(
+    private static async Task<Results<Ok<AccountResponse>, NotFound, ForbidHttpResult>> GetAccount(
         int id,
         BankContext context,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
         var account = await context.Accounts
             .AsNoTracking()
             .SingleOrDefaultAsync(candidate => candidate.Id == id, cancellationToken);
 
-        return account is null
-            ? TypedResults.NotFound()
-            : TypedResults.Ok(AccountResponse.FromEntity(account));
-    }
-
-    private static async Task<Results<Ok<List<AccountTransactionResponse>>, NotFound>> GetTransactions(
-        int id,
-        BankContext context,
-        CancellationToken cancellationToken)
-    {
-        var accountExists = await context.Accounts.AnyAsync(account => account.Id == id, cancellationToken);
-        if (!accountExists)
+        if (account is null)
         {
             return TypedResults.NotFound();
+        }
+
+        return AccountAccess.CanAccess(account, user)
+            ? TypedResults.Ok(AccountResponse.FromEntity(account))
+            : TypedResults.Forbid();
+    }
+
+    private static async Task<Results<Ok<List<AccountTransactionResponse>>, NotFound, ForbidHttpResult>> GetTransactions(
+        int id,
+        BankContext context,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
+    {
+        var account = await context.Accounts
+            .AsNoTracking()
+            .SingleOrDefaultAsync(candidate => candidate.Id == id, cancellationToken);
+        if (account is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        if (!AccountAccess.CanAccess(account, user))
+        {
+            return TypedResults.Forbid();
         }
 
         var transactions = await context.AccountTransactions
@@ -80,17 +109,24 @@ public static class AccountEndpoints
         return TypedResults.Ok(transactions);
     }
 
-    private static async Task<Results<Created<AccountResponse>, ValidationProblem>> CreateAccount(
+    private static async Task<Results<Created<AccountResponse>, ValidationProblem, ForbidHttpResult>> CreateAccount(
         CreateAccountRequest request,
         BankContext context,
+        ClaimsPrincipal user,
         ILogger<BankAccount> logger,
         CancellationToken cancellationToken)
     {
+        var ownerId = AccountAccess.GetUserId(user);
+        if (ownerId is null)
+        {
+            return TypedResults.Forbid();
+        }
+
         BankAccount account;
 
         try
         {
-            account = new BankAccount(request.OwnerId, request.Name, request.Type);
+            account = new BankAccount(ownerId, request.Name, request.Type);
         }
         catch (ArgumentException exception)
         {
@@ -109,10 +145,11 @@ public static class AccountEndpoints
         return TypedResults.Created($"/api/v1/accounts/{account.Id}", response);
     }
 
-    private static async Task<Results<Ok<AccountResponse>, NotFound, ValidationProblem>> Deposit(
+    private static async Task<Results<Ok<AccountResponse>, NotFound, ValidationProblem, ForbidHttpResult>> Deposit(
         int id,
         AccountTransactionRequest request,
         BankContext context,
+        ClaimsPrincipal user,
         ILogger<BankAccount> logger,
         CancellationToken cancellationToken)
     {
@@ -120,6 +157,11 @@ public static class AccountEndpoints
         if (account is null)
         {
             return TypedResults.NotFound();
+        }
+
+        if (!AccountAccess.CanAccess(account, user))
+        {
+            return TypedResults.Forbid();
         }
 
         try
@@ -148,10 +190,11 @@ public static class AccountEndpoints
         return TypedResults.Ok(AccountResponse.FromEntity(account));
     }
 
-    private static async Task<Results<Ok<AccountResponse>, NotFound, ValidationProblem, ProblemHttpResult>> Withdraw(
+    private static async Task<Results<Ok<AccountResponse>, NotFound, ValidationProblem, ProblemHttpResult, ForbidHttpResult>> Withdraw(
         int id,
         AccountTransactionRequest request,
         BankContext context,
+        ClaimsPrincipal user,
         ILogger<BankAccount> logger,
         CancellationToken cancellationToken)
     {
@@ -159,6 +202,11 @@ public static class AccountEndpoints
         if (account is null)
         {
             return TypedResults.NotFound();
+        }
+
+        if (!AccountAccess.CanAccess(account, user))
+        {
+            return TypedResults.Forbid();
         }
 
         try

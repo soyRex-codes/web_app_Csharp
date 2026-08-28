@@ -9,8 +9,9 @@ public sealed class AccountTransactionEndpointTests(BankingApiFactory factory) :
     [Fact]
     public async Task Deposit_CreatesHistoryEntryWithResultingBalance()
     {
-        var accountId = await CreateAccountAsync();
-        var client = factory.CreateClient();
+        var user = await AuthenticatedTestUsers.CreateAsync(factory);
+        var accountId = await CreateAccountAsync(user.Client);
+        var client = user.Client;
 
         var deposit = await client.PostAsJsonAsync($"/api/v1/accounts/{accountId}/deposits", new { amount = 25m });
         Assert.Equal(HttpStatusCode.OK, deposit.StatusCode);
@@ -28,8 +29,9 @@ public sealed class AccountTransactionEndpointTests(BankingApiFactory factory) :
     [Fact]
     public async Task Transactions_AreReturnedNewestFirst()
     {
-        var accountId = await CreateAccountAsync();
-        var client = factory.CreateClient();
+        var user = await AuthenticatedTestUsers.CreateAsync(factory);
+        var accountId = await CreateAccountAsync(user.Client);
+        var client = user.Client;
         await client.PostAsJsonAsync($"/api/v1/accounts/{accountId}/deposits", new { amount = 25m });
         await client.PostAsJsonAsync($"/api/v1/accounts/{accountId}/withdrawals", new { amount = 5m });
 
@@ -41,11 +43,10 @@ public sealed class AccountTransactionEndpointTests(BankingApiFactory factory) :
         Assert.Equal("Deposit", body.RootElement[1].GetProperty("type").GetString());
     }
 
-    private async Task<int> CreateAccountAsync()
+    private static async Task<int> CreateAccountAsync(HttpClient client)
     {
-        var response = await factory.CreateClient().PostAsJsonAsync("/api/v1/accounts", new
+        var response = await client.PostAsJsonAsync("/api/v1/accounts", new
         {
-            ownerId = Guid.NewGuid().ToString(),
             name = "Transaction test account",
             type = "Checking"
         });

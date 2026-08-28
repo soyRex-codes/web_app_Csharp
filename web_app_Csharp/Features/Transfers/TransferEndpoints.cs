@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.HttpResults;
 using web_app_Csharp.Data;
 using web_app_Csharp.Features.Accounts;
+using web_app_Csharp.Features.Identity;
 
 namespace web_app_Csharp.Features.Transfers;
 
@@ -10,7 +12,8 @@ public static class TransferEndpoints
     public static IEndpointRouteBuilder MapTransferEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/api/v1/transfers", Transfer)
-            .WithTags("Transfers");
+            .WithTags("Transfers")
+            .RequireAuthorization();
 
         return endpoints;
     }
@@ -18,6 +21,7 @@ public static class TransferEndpoints
     private static async Task<IResult> Transfer(
         TransferRequest request,
         BankContext context,
+        ClaimsPrincipal user,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
@@ -41,6 +45,11 @@ public static class TransferEndpoints
                 !accounts.TryGetValue(request.ToAccountId, out var toAccount))
             {
                 return TypedResults.NotFound();
+            }
+
+            if (!AccountAccess.CanAccess(fromAccount, user) || !AccountAccess.CanAccess(toAccount, user))
+            {
+                return TypedResults.Forbid();
             }
 
             try
