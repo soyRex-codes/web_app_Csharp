@@ -9,6 +9,7 @@ namespace web_app_Csharp.Pages.Accounts;
 public sealed class IndexModel(AccountOperationsService operations) : PageModel
 {
     public IReadOnlyList<AccountResponse> Accounts { get; private set; } = [];
+    public decimal TotalBalance => Accounts.Sum(account => account.Balance);
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken) =>
         await LoadPageAsync(cancellationToken);

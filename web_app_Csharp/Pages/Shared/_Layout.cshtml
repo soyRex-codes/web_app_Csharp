@@ -9,7 +9,10 @@
 <body>
     <header class="site-header">
         <nav class="navigation" aria-label="Primary navigation">
-            <a class="brand" asp-page="/Index">BankingApp</a>
+            <a class="brand" asp-page="/Index">
+                <span class="brand-mark" aria-hidden="true">B</span>
+                <span>BankingApp</span>
+            </a>
             <div class="navigation-links">
                 @if (User.Identity?.IsAuthenticated == true)
                 {

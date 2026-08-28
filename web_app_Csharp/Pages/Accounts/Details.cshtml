@@ -8,20 +8,33 @@
 
 @if (Model.Account is not null)
 {
-    <section class="content-panel" aria-labelledby="account-title">
-        <a asp-page="/Accounts/Index">← My accounts</a>
-        <p class="eyebrow">@Model.Account.Type account</p>
-        <h1 id="account-title">@Model.Account.Name</h1>
+    <a class="back-link" asp-page="/Accounts/Index">← Back to my accounts</a>
+    <section class="account-hero" aria-labelledby="account-title">
+        <div>
+            <span class="account-type-badge">@Model.Account.Type</span>
+            <h1 id="account-title">@Model.Account.Name</h1>
+            <p>Available balance</p>
+        </div>
         <p class="account-balance">@Model.Account.Balance.ToString("C", CultureInfo.GetCultureInfo("en-US"))</p>
+    </section>
 
-        @if (TempData["Success"] is string success)
-        {
-            <p class="success-message" role="status">@success</p>
-        }
+    @if (TempData["Success"] is string success)
+    {
+        <p class="success-message" role="status">@success</p>
+    }
 
+    <section class="content-panel account-workspace" aria-label="Account management">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">Money management</p>
+                <h2>Move your money</h2>
+            </div>
+            <p class="section-description">Actions are recorded in your transaction history.</p>
+        </div>
         <div class="workflow-grid">
-            <section class="form-section" aria-labelledby="deposit-title">
+            <section class="form-section deposit-section" aria-labelledby="deposit-title">
                 <h2 id="deposit-title">Deposit</h2>
+                <p>Add funds to this account.</p>
                 <form method="post" asp-page-handler="Deposit" asp-route-id="@Model.Account.Id">
                     <div asp-validation-summary="All" class="form-error" role="alert"></div>
                     <div class="field">
@@ -34,6 +47,7 @@
 
             <section class="form-section" aria-labelledby="withdraw-title">
                 <h2 id="withdraw-title">Withdraw</h2>
+                <p>Withdraw from your available balance.</p>
                 <form method="post" asp-page-handler="Withdraw" asp-route-id="@Model.Account.Id">
                     <div asp-validation-summary="All" class="form-error" role="alert"></div>
                     <div class="field">
@@ -46,8 +60,9 @@
 
             @if (Model.TransferDestinations.Count > 0)
             {
-                <section class="form-section" aria-labelledby="transfer-title">
+                <section class="form-section transfer-section" aria-labelledby="transfer-title">
                     <h2 id="transfer-title">Transfer</h2>
+                    <p>Send money to another one of your accounts.</p>
                     <form method="post" asp-page-handler="Transfer" asp-route-id="@Model.Account.Id">
                         <div asp-validation-summary="All" class="form-error" role="alert"></div>
                         <div class="field">
@@ -70,7 +85,13 @@
         </div>
 
         <section class="transaction-history" aria-labelledby="history-title">
-            <h2 id="history-title">Transaction history</h2>
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">Activity</p>
+                    <h2 id="history-title">Transaction history</h2>
+                </div>
+                <span class="account-count">@Model.Transactions.Count records</span>
+            </div>
             @if (Model.Transactions.Count == 0)
             {
                 <p class="empty-state">There are no transactions yet.</p>
@@ -92,7 +113,7 @@
                             @foreach (var transaction in Model.Transactions)
                             {
                                 <tr>
-                                    <td>@transaction.Type</td>
+                                    <td><span class="transaction-badge transaction-@transaction.Type.ToString().ToLowerInvariant()">@transaction.Type</span></td>
                                     <td>@transaction.Amount.ToString("C", CultureInfo.GetCultureInfo("en-US"))</td>
                                     <td>@transaction.BalanceAfter.ToString("C", CultureInfo.GetCultureInfo("en-US"))</td>
                                     <td>@transaction.OccurredAtUtc.ToLocalTime().ToString("g")</td>
