@@ -1,6 +1,7 @@
 @page "/accounts"
 @model web_app_Csharp.Pages.Accounts.IndexModel
 @attribute [Authorize]
+@using System.Globalization
 @{
     ViewData["Title"] = "My accounts";
 }
@@ -60,7 +61,7 @@
                                 <tr>
                                     <td>@account.Name</td>
                                     <td>@account.Type</td>
-                                    <td>@account.Balance.ToString("C")</td>
+                                    <td>@account.Balance.ToString("C", CultureInfo.GetCultureInfo("en-US"))</td>
                                     <td><a asp-page="/Accounts/Details" asp-route-id="@account.Id">Manage</a></td>
                                 </tr>
                             }
