@@ -28,8 +28,20 @@ jobs:
       - name: Build
         run: dotnet build web_app_Csharp.sln --configuration Release --no-restore
 
+      - name: Verify formatting
+        run: dotnet format web_app_Csharp.sln --verify-no-changes --no-restore
+
       - name: Test
-        run: dotnet test web_app_Csharp.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+        run: dotnet test web_app_Csharp.sln --configuration Release --no-build --results-directory TestResults --collect:"XPlat Code Coverage"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Audit dependencies
         run: dotnet package list --project web_app_Csharp/web_app_Csharp.csproj --vulnerable --include-transitive

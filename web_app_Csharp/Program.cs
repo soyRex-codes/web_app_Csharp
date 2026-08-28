@@ -40,7 +40,12 @@ builder.Services.AddProblemDetails(options =>
 var app = builder.Build();
 
 app.UseExceptionHandler();
-app.UseStatusCodePages();
+// Authentication and empty endpoint results should use the same RFC 7807 contract as explicit Problem results.
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var response = statusCodeContext.HttpContext.Response;
+    await Results.Problem(statusCode: response.StatusCode).ExecuteAsync(statusCodeContext.HttpContext);
+});
 app.UseAuthentication();
 app.UseAuthorization();
 
