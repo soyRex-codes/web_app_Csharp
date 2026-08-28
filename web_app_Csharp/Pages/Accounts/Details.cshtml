@@ -1,0 +1,107 @@
+@page "/accounts/{id:int}"
+@model web_app_Csharp.Pages.Accounts.DetailsModel
+@attribute [Authorize]
+@using System.Globalization
+@{
+    ViewData["Title"] = Model.Account?.Name ?? "Account";
+}
+
+@if (Model.Account is not null)
+{
+    <section class="content-panel" aria-labelledby="account-title">
+        <a asp-page="/Accounts/Index">← My accounts</a>
+        <p class="eyebrow">@Model.Account.Type account</p>
+        <h1 id="account-title">@Model.Account.Name</h1>
+        <p class="account-balance">@Model.Account.Balance.ToString("C", CultureInfo.GetCultureInfo("en-US"))</p>
+
+        @if (TempData["Success"] is string success)
+        {
+            <p class="success-message" role="status">@success</p>
+        }
+
+        <div class="workflow-grid">
+            <section class="form-section" aria-labelledby="deposit-title">
+                <h2 id="deposit-title">Deposit</h2>
+                <form method="post" asp-page-handler="Deposit" asp-route-id="@Model.Account.Id">
+                    <div asp-validation-summary="All" class="form-error" role="alert"></div>
+                    <div class="field">
+                        <label for="deposit-amount">Amount</label>
+                        <input id="deposit-amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" required />
+                    </div>
+                    <button class="button" type="submit">Deposit money</button>
+                </form>
+            </section>
+
+            <section class="form-section" aria-labelledby="withdraw-title">
+                <h2 id="withdraw-title">Withdraw</h2>
+                <form method="post" asp-page-handler="Withdraw" asp-route-id="@Model.Account.Id">
+                    <div asp-validation-summary="All" class="form-error" role="alert"></div>
+                    <div class="field">
+                        <label for="withdraw-amount">Amount</label>
+                        <input id="withdraw-amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" required />
+                    </div>
+                    <button class="button" type="submit">Withdraw money</button>
+                </form>
+            </section>
+
+            @if (Model.TransferDestinations.Count > 0)
+            {
+                <section class="form-section" aria-labelledby="transfer-title">
+                    <h2 id="transfer-title">Transfer</h2>
+                    <form method="post" asp-page-handler="Transfer" asp-route-id="@Model.Account.Id">
+                        <div asp-validation-summary="All" class="form-error" role="alert"></div>
+                        <div class="field">
+                            <label for="to-account-id">Destination account</label>
+                            <select id="to-account-id" name="toAccountId">
+                                @foreach (var destination in Model.TransferDestinations)
+                                {
+                                    <option value="@destination.Id">@destination.Name (@destination.Balance.ToString("C", CultureInfo.GetCultureInfo("en-US")))</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="transfer-amount">Amount</label>
+                            <input id="transfer-amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" required />
+                        </div>
+                        <button class="button" type="submit">Transfer money</button>
+                    </form>
+                </section>
+            }
+        </div>
+
+        <section class="transaction-history" aria-labelledby="history-title">
+            <h2 id="history-title">Transaction history</h2>
+            @if (Model.Transactions.Count == 0)
+            {
+                <p class="empty-state">There are no transactions yet.</p>
+            }
+            else
+            {
+                <div class="table-wrapper">
+                    <table>
+                        <caption class="visually-hidden">Transaction history for @Model.Account.Name</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Type</th>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Balance after</th>
+                                <th scope="col">When</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var transaction in Model.Transactions)
+                            {
+                                <tr>
+                                    <td>@transaction.Type</td>
+                                    <td>@transaction.Amount.ToString("C", CultureInfo.GetCultureInfo("en-US"))</td>
+                                    <td>@transaction.BalanceAfter.ToString("C", CultureInfo.GetCultureInfo("en-US"))</td>
+                                    <td>@transaction.OccurredAtUtc.ToLocalTime().ToString("g")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </section>
+}
