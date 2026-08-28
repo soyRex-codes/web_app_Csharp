@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using web_app_Csharp.Data;
+using web_app_Csharp.Features.Identity;
 
 namespace web_app_Csharp.Tests;
 
@@ -34,6 +35,7 @@ public sealed class BankingApiFactory : WebApplicationFactory<Program>
         var host = base.CreateHost(builder);
         using var scope = host.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<BankContext>().Database.EnsureCreated();
+        IdentityDataSeeder.EnsureRolesAsync(scope.ServiceProvider).GetAwaiter().GetResult();
         return host;
     }
 
