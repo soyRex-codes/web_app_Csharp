@@ -1,7 +1,6 @@
 namespace web_app_Csharp.Features.Accounts;
 
 public sealed record CreateAccountRequest(
-    string OwnerId,
     string Name,
     AccountType Type);
 

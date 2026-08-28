@@ -9,9 +9,10 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
     [Fact]
     public async Task Transfer_UpdatesBothBalancesAndWritesHistoryForEachAccount()
     {
-        var fromAccountId = await CreateAccountAsync("Transfer source");
-        var toAccountId = await CreateAccountAsync("Transfer destination");
-        var client = factory.CreateClient();
+        var user = await AuthenticatedTestUsers.CreateAsync(factory);
+        var fromAccountId = await CreateAccountAsync(user.Client, "Transfer source");
+        var toAccountId = await CreateAccountAsync(user.Client, "Transfer destination");
+        var client = user.Client;
         await client.PostAsJsonAsync($"/api/v1/accounts/{fromAccountId}/deposits", new { amount = 100m });
 
         var response = await client.PostAsJsonAsync("/api/v1/transfers", new
@@ -22,11 +23,11 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(40m, await GetBalanceAsync(fromAccountId));
-        Assert.Equal(60m, await GetBalanceAsync(toAccountId));
+        Assert.Equal(40m, await GetBalanceAsync(client, fromAccountId));
+        Assert.Equal(60m, await GetBalanceAsync(client, toAccountId));
 
-        var fromHistory = await GetTransactionsAsync(fromAccountId);
-        var toHistory = await GetTransactionsAsync(toAccountId);
+        var fromHistory = await GetTransactionsAsync(client, fromAccountId);
+        var toHistory = await GetTransactionsAsync(client, toAccountId);
 
         var transferOut = Assert.Single(fromHistory, transaction => transaction.Type == "TransferOut");
         Assert.Equal(60m, transferOut.Amount);
@@ -40,9 +41,10 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
     [Fact]
     public async Task Transfer_WithInsufficientFunds_DoesNotChangeBalancesOrHistory()
     {
-        var fromAccountId = await CreateAccountAsync("Insufficient source");
-        var toAccountId = await CreateAccountAsync("Insufficient destination");
-        var client = factory.CreateClient();
+        var user = await AuthenticatedTestUsers.CreateAsync(factory);
+        var fromAccountId = await CreateAccountAsync(user.Client, "Insufficient source");
+        var toAccountId = await CreateAccountAsync(user.Client, "Insufficient destination");
+        var client = user.Client;
         await client.PostAsJsonAsync($"/api/v1/accounts/{fromAccountId}/deposits", new { amount = 50m });
 
         var response = await client.PostAsJsonAsync("/api/v1/transfers", new
@@ -53,12 +55,12 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
         });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Equal(50m, await GetBalanceAsync(fromAccountId));
-        Assert.Equal(0m, await GetBalanceAsync(toAccountId));
-        var fromHistory = await GetTransactionsAsync(fromAccountId);
+        Assert.Equal(50m, await GetBalanceAsync(client, fromAccountId));
+        Assert.Equal(0m, await GetBalanceAsync(client, toAccountId));
+        var fromHistory = await GetTransactionsAsync(client, fromAccountId);
         Assert.Single(fromHistory);
         Assert.Equal("Deposit", fromHistory[0].Type);
-        Assert.Empty(await GetTransactionsAsync(toAccountId));
+        Assert.Empty(await GetTransactionsAsync(client, toAccountId));
     }
 
     [Theory]
@@ -66,10 +68,11 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
     [InlineData(-1)]
     public async Task Transfer_WithNonPositiveAmount_ReturnsBadRequest(decimal amount)
     {
-        var fromAccountId = await CreateAccountAsync("Invalid amount source");
-        var toAccountId = await CreateAccountAsync("Invalid amount destination");
+        var user = await AuthenticatedTestUsers.CreateAsync(factory);
+        var fromAccountId = await CreateAccountAsync(user.Client, "Invalid amount source");
+        var toAccountId = await CreateAccountAsync(user.Client, "Invalid amount destination");
 
-        var response = await factory.CreateClient().PostAsJsonAsync("/api/v1/transfers", new
+        var response = await user.Client.PostAsJsonAsync("/api/v1/transfers", new
         {
             fromAccountId,
             toAccountId,
@@ -82,9 +85,10 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
     [Fact]
     public async Task Transfer_ToSameAccount_ReturnsBadRequest()
     {
-        var accountId = await CreateAccountAsync("Same account");
+        var user = await AuthenticatedTestUsers.CreateAsync(factory);
+        var accountId = await CreateAccountAsync(user.Client, "Same account");
 
-        var response = await factory.CreateClient().PostAsJsonAsync("/api/v1/transfers", new
+        var response = await user.Client.PostAsJsonAsync("/api/v1/transfers", new
         {
             fromAccountId = accountId,
             toAccountId = accountId,
@@ -94,11 +98,10 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    private async Task<int> CreateAccountAsync(string name)
+    private static async Task<int> CreateAccountAsync(HttpClient client, string name)
     {
-        var response = await factory.CreateClient().PostAsJsonAsync("/api/v1/accounts", new
+        var response = await client.PostAsJsonAsync("/api/v1/accounts", new
         {
-            ownerId = Guid.NewGuid().ToString(),
             name,
             type = "Checking"
         });
@@ -108,18 +111,18 @@ public sealed class TransferEndpointTests(BankingApiFactory factory) : IClassFix
         return body.RootElement.GetProperty("id").GetInt32();
     }
 
-    private async Task<decimal> GetBalanceAsync(int accountId)
+    private static async Task<decimal> GetBalanceAsync(HttpClient client, int accountId)
     {
-        var response = await factory.CreateClient().GetAsync($"/api/v1/accounts/{accountId}");
+        var response = await client.GetAsync($"/api/v1/accounts/{accountId}");
         response.EnsureSuccessStatusCode();
 
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         return body.RootElement.GetProperty("balance").GetDecimal();
     }
 
-    private async Task<List<TransactionSummary>> GetTransactionsAsync(int accountId)
+    private static async Task<List<TransactionSummary>> GetTransactionsAsync(HttpClient client, int accountId)
     {
-        var response = await factory.CreateClient().GetAsync($"/api/v1/accounts/{accountId}/transactions");
+        var response = await client.GetAsync($"/api/v1/accounts/{accountId}/transactions");
         response.EnsureSuccessStatusCode();
 
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
