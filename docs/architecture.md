@@ -34,6 +34,8 @@ ASP.NET Core Identity owns password hashing and the application cookie. New user
 
 Customers may list and operate only on their own accounts. Administrators may access all accounts. A customer transfer requires ownership of both accounts; an administrator may transfer between any two accounts. Requests that cross a customer's ownership boundary return `403 Forbidden`.
 
+The Razor Pages shell renders the browser layout and uses same-origin `fetch` calls to these existing APIs. It deliberately does not add a second frontend framework or duplicate account operations in page handlers.
+
 ## Error and operational conventions
 
 The API uses built-in `ILogger` and ASP.NET Core Problem Details. Validation, missing resources, insufficient funds, unauthenticated requests, and forbidden requests use `application/problem+json` with a trace ID. GitHub Actions restores, builds, verifies formatting, tests, audits dependencies, builds the container, and stores coverage as an artifact without enforcing an artificial percentage target.

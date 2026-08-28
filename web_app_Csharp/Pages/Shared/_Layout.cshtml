@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BankingApp</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navigation" aria-label="Primary navigation">
+            <a class="brand" asp-page="/Index">BankingApp</a>
+            <div class="navigation-links">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-page="/Accounts/Index">My accounts</a>
+                    @if (User.IsInRole(ApplicationRoles.Admin))
+                    {
+                        <a asp-page="/Admin/Accounts">All accounts</a>
+                    }
+                    <button class="link-button" type="button" data-logout>Sign out</button>
+                }
+                else
+                {
+                    <a asp-page="/Login">Sign in</a>
+                    <a class="button button-small" asp-page="/Register">Register</a>
+                }
+            </div>
+        </nav>
+    </header>
+    <main class="page-content">
+        @RenderBody()
+    </main>
+    <script src="~/js/banking-pages.js" defer></script>
+</body>
+</html>

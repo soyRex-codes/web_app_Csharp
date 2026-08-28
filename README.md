@@ -2,7 +2,7 @@
 
 [![.NET CI](https://github.com/soyRex-codes/web_app_Csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/soyRex-codes/web_app_Csharp/actions/workflows/dotnet.yml)
 
-A small banking API built with C# 14, .NET 10, ASP.NET Core Minimal APIs, ASP.NET Core Identity, Entity Framework Core, and SQL Server. It demonstrates account ownership, money-operation rules, immutable transaction history, and atomic transfers without unnecessary layers.
+A small banking API and Razor Pages demo built with C# 14, .NET 10, ASP.NET Core Minimal APIs, ASP.NET Core Identity, Entity Framework Core, and SQL Server. It demonstrates account ownership, money-operation rules, immutable transaction history, and atomic transfers without unnecessary layers.
 
 ## What it does
 
@@ -10,6 +10,7 @@ A small banking API built with C# 14, .NET 10, ASP.NET Core Minimal APIs, ASP.NE
 - Assign every new user the `Customer` role; support an `Admin` role for administrative access.
 - Create checking or savings accounts owned by the authenticated user.
 - Deposit, withdraw, transfer, and view transaction history for authorized accounts.
+- Provide a thin, API-backed Razor Pages shell for registration, sign-in, My Accounts, and the admin account list.
 - Return RFC 7807 Problem Details for validation, authentication, authorization, missing-resource, and insufficient-funds failures.
 - Run tests, formatting verification, dependency auditing, container builds, and measured coverage in GitHub Actions.
 
@@ -41,6 +42,8 @@ web_app_Csharp/
 │   ├── Accounts/
 │   ├── Identity/
 │   └── Transfers/
+├── Pages/
+├── wwwroot/
 ├── Program.cs
 └── Dockerfile
 ```
@@ -77,6 +80,16 @@ Verify it with:
 ```bash
 curl -i http://localhost:8080/openapi/v1.json
 ```
+
+## Browser demo
+
+The Razor Pages shell is served by the same application and calls the existing APIs with the Identity cookie. It does not introduce a second frontend stack or duplicate account behavior.
+
+- [Register](http://localhost:8080/register) a Customer user.
+- [Sign in](http://localhost:8080/login), then open [My Accounts](http://localhost:8080/accounts).
+- A Development-seeded admin can open [All Accounts](http://localhost:8080/admin/accounts).
+
+The next UI feature will add account-creation and money-operation forms. For now, use the documented API or HTTP request file to create account data for the dashboard.
 
 Stop the services while preserving the local SQL Server volume:
 
@@ -232,7 +245,7 @@ GitHub Actions also audits NuGet dependencies, builds the container image, and u
 
 - Monetary values use `decimal(18,2)` and reject fractional cents; the API is USD-only.
 - Account transactions record successful deposits, withdrawals, and transfers. They are not a complete external audit or reconciliation system.
-- Authentication uses same-application cookies for the planned server-rendered UI. There are no JWT refresh tokens, external identity providers, email confirmation, or password-reset flows.
+- Authentication uses same-application cookies for the Razor Pages shell. There are no JWT refresh tokens, external identity providers, email confirmation, or password-reset flows.
 - Account ownership is enforced in the API. Admin provisioning beyond the Development bootstrap is intentionally outside this project.
 - Transfers use one database transaction, but the project does not yet implement idempotency keys or cross-system payment processing.
 - Automatic migrations run only in Development. Production deployment, monitoring infrastructure, and external payment integrations are out of scope.

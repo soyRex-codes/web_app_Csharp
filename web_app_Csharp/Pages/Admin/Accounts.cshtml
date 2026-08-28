@@ -1,0 +1,28 @@
+@page "/admin/accounts"
+@attribute [Authorize(Roles = ApplicationRoles.Admin)]
+@{
+    ViewData["Title"] = "All accounts";
+}
+
+<section class="content-panel" aria-labelledby="all-accounts-title">
+    <p class="eyebrow">Administrator view</p>
+    <h1 id="all-accounts-title">All accounts</h1>
+    <p>This view uses the same account API. Admin authorization permits access to every account.</p>
+
+    <div class="form-error" data-accounts-error role="alert" hidden></div>
+    <p class="empty-state" data-empty-state hidden>There are no accounts yet.</p>
+    <div class="table-wrapper">
+        <table data-accounts-table data-show-owner="true">
+            <caption class="visually-hidden">All banking accounts</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Balance</th>
+                    <th scope="col">Owner ID</th>
+                </tr>
+            </thead>
+            <tbody data-accounts-list></tbody>
+        </table>
+    </div>
+</section>
