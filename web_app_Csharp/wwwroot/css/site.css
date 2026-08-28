@@ -135,7 +135,16 @@ input {
     padding: 0.65rem;
 }
 
+select {
+    background: #ffffff;
+    border: 1px solid #94a3b8;
+    border-radius: 0.35rem;
+    font: inherit;
+    padding: 0.65rem;
+}
+
 input:focus-visible,
+select:focus-visible,
 .button:focus-visible,
 a:focus-visible,
 .link-button:focus-visible {
@@ -192,6 +201,40 @@ th {
 .empty-state {
     color: #475569;
     margin-top: 1.5rem;
+}
+
+.workflow-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    margin-top: 1.5rem;
+}
+
+.workflow-grid h2,
+.transaction-history h2 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.form-section {
+    background: #f8fafc;
+    border: 1px solid #d8deea;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+}
+
+.form-section .form-error:empty {
+    display: none;
+}
+
+.account-balance {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 700;
+    margin: 0.5rem 0 0;
+}
+
+.transaction-history {
+    margin-top: 2.5rem;
 }
 
 .visually-hidden {

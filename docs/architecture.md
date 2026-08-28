@@ -34,7 +34,7 @@ ASP.NET Core Identity owns password hashing and the application cookie. New user
 
 Customers may list and operate only on their own accounts. Administrators may access all accounts. A customer transfer requires ownership of both accounts; an administrator may transfer between any two accounts. Requests that cross a customer's ownership boundary return `403 Forbidden`.
 
-The Razor Pages shell renders the browser layout and uses same-origin `fetch` calls to these existing APIs. It deliberately does not add a second frontend framework or duplicate account operations in page handlers.
+Razor Pages render the browser workflow and use normal anti-forgery-protected form posts. Their handlers and the Minimal APIs share the focused `AccountOperationsService`, so account rules and persistence remain consistent without a second frontend framework or generic data layer.
 
 ## Error and operational conventions
 

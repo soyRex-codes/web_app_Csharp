@@ -1,4 +1,5 @@
 @page "/accounts"
+@model web_app_Csharp.Pages.Accounts.IndexModel
 @attribute [Authorize]
 @{
     ViewData["Title"] = "My accounts";
@@ -7,21 +8,66 @@
 <section class="content-panel" aria-labelledby="accounts-title">
     <p class="eyebrow">Customer dashboard</p>
     <h1 id="accounts-title">My accounts</h1>
-    <p>Your balances are loaded from the account API for the signed-in user.</p>
+    <p>Open an account, then select it to manage money and review its history.</p>
 
-    <div class="form-error" data-accounts-error role="alert" hidden></div>
-    <p class="empty-state" data-empty-state hidden>You do not have any accounts yet.</p>
-    <div class="table-wrapper">
-        <table data-accounts-table data-show-owner="false">
-            <caption class="visually-hidden">Your banking accounts</caption>
-            <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Balance</th>
-                </tr>
-            </thead>
-            <tbody data-accounts-list></tbody>
-        </table>
+    @if (TempData["Success"] is string success)
+    {
+        <p class="success-message" role="status">@success</p>
+    }
+
+    <div class="workflow-grid">
+        <section class="form-section" aria-labelledby="open-account-title">
+            <h2 id="open-account-title">Open an account</h2>
+            <form method="post" asp-page-handler="Create">
+                <div asp-validation-summary="All" class="form-error" role="alert"></div>
+                <div class="field">
+                    <label for="name">Account name</label>
+                    <input id="name" name="name" autocomplete="off" maxlength="100" required />
+                </div>
+                <div class="field">
+                    <label for="type">Account type</label>
+                    <select id="type" name="type">
+                        <option value="Checking">Checking</option>
+                        <option value="Savings">Savings</option>
+                    </select>
+                </div>
+                <button class="button" type="submit">Open account</button>
+            </form>
+        </section>
+
+        <section aria-labelledby="account-list-title">
+            <h2 id="account-list-title">Your accounts</h2>
+            @if (Model.Accounts.Count == 0)
+            {
+                <p class="empty-state">You do not have any accounts yet.</p>
+            }
+            else
+            {
+                <div class="table-wrapper">
+                    <table>
+                        <caption class="visually-hidden">Your banking accounts</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Balance</th>
+                                <th scope="col"><span class="visually-hidden">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var account in Model.Accounts)
+                            {
+                                <tr>
+                                    <td>@account.Name</td>
+                                    <td>@account.Type</td>
+                                    <td>@account.Balance.ToString("C")</td>
+                                    <td><a asp-page="/Accounts/Details" asp-route-id="@account.Id">Manage</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
     </div>
 </section>

@@ -35,6 +35,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<AccountOperationsService>();
 builder.Services.AddRazorPages();
 builder.Services.AddOpenApi();
 builder.Services.ConfigureHttpJsonOptions(options =>

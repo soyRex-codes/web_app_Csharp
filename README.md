@@ -10,7 +10,7 @@ A small banking API and Razor Pages demo built with C# 14, .NET 10, ASP.NET Core
 - Assign every new user the `Customer` role; support an `Admin` role for administrative access.
 - Create checking or savings accounts owned by the authenticated user.
 - Deposit, withdraw, transfer, and view transaction history for authorized accounts.
-- Provide a thin, API-backed Razor Pages shell for registration, sign-in, My Accounts, and the admin account list.
+- Provide Razor Pages for registration, sign-in, account workflows, transaction history, and the admin account list.
 - Return RFC 7807 Problem Details for validation, authentication, authorization, missing-resource, and insufficient-funds failures.
 - Run tests, formatting verification, dependency auditing, container builds, and measured coverage in GitHub Actions.
 
@@ -83,13 +83,12 @@ curl -i http://localhost:8080/openapi/v1.json
 
 ## Browser demo
 
-The Razor Pages shell is served by the same application and calls the existing APIs with the Identity cookie. It does not introduce a second frontend stack or duplicate account behavior.
+The Razor Pages demo is served by the same application and uses the Identity cookie. Its banking forms use the same focused account-operations service as the APIs, so the browser and API enforce the same rules without a second frontend stack.
 
 - [Register](http://localhost:8080/register) a Customer user.
-- [Sign in](http://localhost:8080/login), then open [My Accounts](http://localhost:8080/accounts).
+- [Sign in](http://localhost:8080/login), then open [My Accounts](http://localhost:8080/accounts) to create and manage checking or savings accounts.
+- Deposit, withdraw, transfer to another owned account, and review transaction history from an account's **Manage** page.
 - A Development-seeded admin can open [All Accounts](http://localhost:8080/admin/accounts).
-
-The next UI feature will add account-creation and money-operation forms. For now, use the documented API or HTTP request file to create account data for the dashboard.
 
 Stop the services while preserving the local SQL Server volume:
 
