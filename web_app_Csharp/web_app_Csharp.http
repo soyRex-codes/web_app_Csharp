@@ -1,21 +1,39 @@
-@host = http://localhost:5000
+@host = http://localhost:8080
+@email = customer@example.test
+@password = Portfolio1!
 
-GET {{host}}/api/v1/accounts
-Accept: application/json
+### Register a customer. Run once per email address.
+POST {{host}}/api/v1/auth/register
+Content-Type: application/json
 
-###
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
 
+### Log in. JetBrains HTTP clients retain the returned cookie for later requests.
+POST {{host}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Create an account for the signed-in user. Owner ID is never accepted from the request.
 POST {{host}}/api/v1/accounts
 Content-Type: application/json
 
 {
-  "ownerId": "user-123",
   "name": "Everyday Checking",
   "type": "Checking"
 }
 
-###
+### List accounts owned by the current customer.
+GET {{host}}/api/v1/accounts
+Accept: application/json
 
+### Replace 1 with an account ID returned above.
 POST {{host}}/api/v1/accounts/1/deposits
 Content-Type: application/json
 
@@ -23,8 +41,7 @@ Content-Type: application/json
   "amount": 500.00
 }
 
-###
-
+### Replace 1 with an account ID returned above.
 POST {{host}}/api/v1/accounts/1/withdrawals
 Content-Type: application/json
 
@@ -32,4 +49,19 @@ Content-Type: application/json
   "amount": 125.00
 }
 
-###
+### View transaction history, newest first.
+GET {{host}}/api/v1/accounts/1/transactions
+Accept: application/json
+
+### Transfer between two accounts owned by the signed-in customer.
+POST {{host}}/api/v1/transfers
+Content-Type: application/json
+
+{
+  "fromAccountId": 1,
+  "toAccountId": 2,
+  "amount": 125.00
+}
+
+### End the current session.
+POST {{host}}/api/v1/auth/logout
