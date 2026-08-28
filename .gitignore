@@ -27,3 +27,6 @@ coverage/
 # Environment/local secrets
 .env
 appsettings.Development.local.json
+
+# Local HTTP client sessions
+cookies.txt
