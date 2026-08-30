@@ -6,7 +6,7 @@ A small banking API and Razor Pages demo built with C# 14, .NET 10, ASP.NET Core
 
 ## What it does
 
-- Register, log in, and log out with ASP.NET Core Identity cookie authentication.
+- Register, log in, and log out with ASP.NET Core Identity cookie authentication; passwords are hashed by Identity and never stored or logged by application code.
 - Assign every new user the `Customer` role; support an `Admin` role for administrative access.
 - Create checking or savings accounts owned by the authenticated user.
 - Deposit, withdraw, transfer, and view transaction history for authorized accounts.
@@ -19,9 +19,11 @@ This is a portfolio project, not a production banking system. See [deliberate sc
 ## Architecture
 
 ```text
-HTTP request
+Banking request
     ↓
-Minimal API endpoint + request/response contract
+Minimal API endpoint or Razor Page handler
+    ↓
+AccountOperationsService
     ↓
 BankAccount domain behavior and authorization checks
     ↓
@@ -30,7 +32,7 @@ EF Core BankContext
 SQL Server
 ```
 
-The application is a modular monolith organized by feature. EF Core's `DbContext` is used directly as the unit of work; there is no generic repository or service layer. Read the [architecture note](docs/architecture.md) for the important design decisions.
+The application is a modular monolith organized by feature. EF Core's `DbContext` is used directly as the unit of work. A single focused `AccountOperationsService` shares banking workflows between Minimal APIs and Razor Pages; there is no generic repository or generic service layer. Read the [architecture note](docs/architecture.md) for the important design decisions.
 
 ```text
 web_app_Csharp/
@@ -242,7 +244,7 @@ GitHub Actions also audits NuGet dependencies, builds the container image, and u
 
 ## Deliberate scope
 
-- Monetary values use `decimal(18,2)` and reject fractional cents; the API is USD-only.
+- Monetary values use `decimal(18,2)` and reject fractional cents. The demo displays amounts as USD; multi-currency and conversion are out of scope.
 - Account transactions record successful deposits, withdrawals, and transfers. They are not a complete external audit or reconciliation system.
 - Authentication uses same-application cookies for the Razor Pages shell. There are no JWT refresh tokens, external identity providers, email confirmation, or password-reset flows.
 - Account ownership is enforced in the API. Admin provisioning beyond the Development bootstrap is intentionally outside this project.

@@ -2,21 +2,21 @@
 
 ## Request flow
 
-The application is a modular monolith. HTTP endpoints live beside their feature contracts, use `BankContext` directly, and execute against SQL Server through Entity Framework Core.
+The application is a modular monolith. Minimal API endpoints and Razor Pages live beside their feature contracts. Banking workflows use a focused service with `BankContext` and execute against SQL Server through Entity Framework Core.
 
 ```text
-Minimal API endpoint
+Minimal API endpoint or Razor Page handler
     ↓
-Request contract + authorization check
+AccountOperationsService
     ↓
-BankAccount domain operation
+Request contract, authorization check, and BankAccount domain operation
     ↓
 BankContext / EF Core
     ↓
 SQL Server
 ```
 
-`DbContext` already tracks changes and coordinates `SaveChangesAsync`, so the project does not wrap it in a generic repository or unit-of-work abstraction.
+`DbContext` already tracks changes and coordinates `SaveChangesAsync`, so the project does not wrap it in a generic repository or unit-of-work abstraction. `AccountOperationsService` is intentionally focused on the banking workflows shared by Minimal APIs and Razor Pages, rather than a generic service layer.
 
 ## Encapsulated balances
 
@@ -30,7 +30,7 @@ Transfers run inside one explicit EF Core database transaction. The source withd
 
 ## Authentication and account ownership
 
-ASP.NET Core Identity owns password hashing and the application cookie. New users receive the `Customer` role. Account creation obtains its owner ID from the signed-in user's claim, never from a request body.
+ASP.NET Core Identity owns password hashing and the application cookie. Application code never stores or logs raw passwords. New users receive the `Customer` role. Account creation obtains its owner ID from the signed-in user's claim, never from a request body.
 
 Customers may list and operate only on their own accounts. Administrators may access all accounts. A customer transfer requires ownership of both accounts; an administrator may transfer between any two accounts. Requests that cross a customer's ownership boundary return `403 Forbidden`.
 

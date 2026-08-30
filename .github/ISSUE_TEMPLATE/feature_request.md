@@ -19,10 +19,10 @@ Any alternative solutions or features you've considered.
 ## API Design (if applicable)
 ```
 // Example endpoint or interface
-POST /api/Bank/transfer
+POST /api/v1/transfers
 {
-    "fromOwner": "Alice",
-    "toOwner": "Bob",
+    "fromAccountId": 1,
+    "toAccountId": 2,
     "amount": 100.00
 }
 ```
