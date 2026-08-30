@@ -126,6 +126,36 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project web_app_Csharp
 
 Development startup applies pending migrations automatically. Production deployments should apply migrations as a separate deployment step.
 
+## Deploy the portfolio demo
+
+The live demo uses Azure Container Apps for the application and Azure SQL Database for persistent data. Docker Compose remains a local-development setup; it does not deploy the SQL Server container to the public internet.
+
+Before the first release, create an Azure SQL database and apply migrations from a trusted machine. Copy its ADO.NET connection string from the Azure portal, replace its password placeholder locally, and store it only in user secrets:
+
+```bash
+dotnet user-secrets set \
+  --project web_app_Csharp \
+  "ConnectionStrings:BankDatabase" \
+  "<Azure SQL ADO.NET connection string>"
+
+dotnet ef database update --project web_app_Csharp --startup-project web_app_Csharp
+```
+
+In non-development environments, ASP.NET Core Data Protection keys are stored in the same SQL database. This preserves Identity cookie sessions when a container revision restarts or scales to zero.
+
+The **Deploy portfolio demo** workflow publishes a Linux `amd64` image to GitHub Container Registry and, after configuration, updates the Azure Container App only after `.NET CI` succeeds on `main`.
+
+For the first image, run the workflow manually with **deploy** unchecked. Make the resulting `bankingapp` package public in its GitHub package settings, then create an Azure Container App from that image with:
+
+- external ingress on target port `8080`;
+- `ASPNETCORE_ENVIRONMENT=Production` and `ASPNETCORE_HTTP_PORTS=8080` environment variables;
+- a `ConnectionStrings__BankDatabase` secret containing the Azure SQL connection string, referenced by the container environment variable of the same name;
+- minimum replicas `0` and maximum replicas `1` for the low-traffic demo.
+
+After the Container App exists, configure these repository-level GitHub Actions variables: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, and `AZURE_CONTAINER_APP_NAME`. Use Azure workload identity federation for the GitHub Actions identity; grant it `Contributor` only on this demo resource group. No Azure password, SQL connection string, or client secret belongs in the repository or GitHub Actions variables.
+
+Run the workflow once more with **deploy** checked to deploy the current image. Later successful CI runs on `main` publish and deploy automatically. The first request after an idle period can be slower because Container Apps is allowed to scale to zero.
+
 ## Development admin
 
 New registrations receive only the `Customer` role. For local development, an admin can be seeded only when both values are stored in user secrets:
@@ -249,4 +279,4 @@ GitHub Actions also audits NuGet dependencies, builds the container image, and u
 - Authentication uses same-application cookies for the Razor Pages shell. There are no JWT refresh tokens, external identity providers, email confirmation, or password-reset flows.
 - Account ownership is enforced in the API. Admin provisioning beyond the Development bootstrap is intentionally outside this project.
 - Transfers use one database transaction, but the project does not yet implement idempotency keys or cross-system payment processing.
-- Automatic migrations run only in Development. Production deployment, monitoring infrastructure, and external payment integrations are out of scope.
+- Automatic migrations run only in Development. Production database migrations are a deliberate release step; monitoring infrastructure and external payment integrations are out of scope.

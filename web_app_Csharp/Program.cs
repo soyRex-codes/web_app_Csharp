@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -19,6 +20,15 @@ builder.Services.AddDbContext<BankContext>(options =>
     options.UseSqlServer(
         connectionString,
         sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()));
+
+if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"))
+{
+    // Container filesystems are ephemeral. SQL-backed keys preserve authentication cookies across restarts and scale-to-zero.
+    builder.Services.AddDataProtection()
+        .SetApplicationName("BankingApp")
+        .PersistKeysToDbContext<BankContext>();
+}
+
 builder.Services
     .AddIdentityCore<ApplicationUser>(options => options.User.RequireUniqueEmail = true)
     .AddRoles<IdentityRole>()
