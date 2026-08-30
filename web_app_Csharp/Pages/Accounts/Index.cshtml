@@ -6,69 +6,74 @@
     ViewData["Title"] = "My accounts";
 }
 
-<section class="content-panel" aria-labelledby="accounts-title">
-    <p class="eyebrow">Customer dashboard</p>
-    <h1 id="accounts-title">My accounts</h1>
-    <p>Open an account, then select it to manage money and review its history.</p>
-
-    @if (TempData["Success"] is string success)
-    {
-        <p class="success-message" role="status">@success</p>
-    }
-
-    <div class="workflow-grid">
-        <section class="form-section" aria-labelledby="open-account-title">
-            <h2 id="open-account-title">Open an account</h2>
-            <form method="post" asp-page-handler="Create">
-                <div asp-validation-summary="All" class="form-error" role="alert"></div>
-                <div class="field">
-                    <label for="name">Account name</label>
-                    <input id="name" name="name" autocomplete="off" maxlength="100" required />
-                </div>
-                <div class="field">
-                    <label for="type">Account type</label>
-                    <select id="type" name="type">
-                        <option value="Checking">Checking</option>
-                        <option value="Savings">Savings</option>
-                    </select>
-                </div>
-                <button class="button" type="submit">Open account</button>
-            </form>
-        </section>
-
-        <section aria-labelledby="account-list-title">
-            <h2 id="account-list-title">Your accounts</h2>
-            @if (Model.Accounts.Count == 0)
-            {
-                <p class="empty-state">You do not have any accounts yet.</p>
-            }
-            else
-            {
-                <div class="table-wrapper">
-                    <table>
-                        <caption class="visually-hidden">Your banking accounts</caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">Name</th>
-                                <th scope="col">Type</th>
-                                <th scope="col">Balance</th>
-                                <th scope="col"><span class="visually-hidden">Actions</span></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var account in Model.Accounts)
-                            {
-                                <tr>
-                                    <td>@account.Name</td>
-                                    <td>@account.Type</td>
-                                    <td>@account.Balance.ToString("C", CultureInfo.GetCultureInfo("en-US"))</td>
-                                    <td><a asp-page="/Accounts/Details" asp-route-id="@account.Id">Manage</a></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </section>
+<section class="dashboard-header" aria-labelledby="accounts-title">
+    <div>
+        <p class="eyebrow">Customer dashboard</p>
+        <h1 id="accounts-title">My accounts</h1>
+        <p>Keep track of your accounts and manage your money with confidence.</p>
     </div>
+    <div class="total-balance-card">
+        <span>Total balance</span>
+        <strong>@Model.TotalBalance.ToString("C", CultureInfo.GetCultureInfo("en-US"))</strong>
+        <small>@Model.Accounts.Count account@(Model.Accounts.Count == 1 ? string.Empty : "s")</small>
+    </div>
+</section>
+
+<section class="dashboard-layout" aria-label="Account management">
+    <section class="open-account-panel" aria-labelledby="open-account-title">
+        <p class="section-kicker">Start here</p>
+        <h2 id="open-account-title">Open an account</h2>
+        <p>Choose a name and account type to begin.</p>
+
+        <form method="post" asp-page-handler="Create">
+            <div asp-validation-summary="All" class="form-error" role="alert"></div>
+            <div class="field">
+                <label for="name">Account name</label>
+                <input id="name" name="name" autocomplete="off" maxlength="100" placeholder="e.g. Everyday checking" required />
+            </div>
+            <div class="field">
+                <label for="type">Account type</label>
+                <select id="type" name="type">
+                    <option value="Checking">Checking</option>
+                    <option value="Savings">Savings</option>
+                </select>
+            </div>
+            <button class="button" type="submit">Open account</button>
+        </form>
+    </section>
+
+    <section class="account-list-panel" aria-labelledby="account-list-title">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">Portfolio</p>
+                <h2 id="account-list-title">Your accounts</h2>
+            </div>
+            <span class="account-count">@Model.Accounts.Count total</span>
+        </div>
+        @if (TempData["Success"] is string success)
+        {
+            <p class="success-message" role="status">@success</p>
+        }
+        @if (Model.Accounts.Count == 0)
+        {
+            <p class="empty-state">You do not have any accounts yet. Open your first account to get started.</p>
+        }
+        else
+        {
+            <div class="account-card-grid">
+                @foreach (var account in Model.Accounts)
+                {
+                    <article class="account-card">
+                        <div class="account-card-header">
+                            <span class="account-type-badge">@account.Type</span>
+                            <a asp-page="/Accounts/Details" asp-route-id="@account.Id">Manage <span aria-hidden="true">→</span></a>
+                        </div>
+                        <h3>@account.Name</h3>
+                        <p class="account-card-label">Available balance</p>
+                        <p class="account-card-balance">@account.Balance.ToString("C", CultureInfo.GetCultureInfo("en-US"))</p>
+                    </article>
+                }
+            </div>
+        }
+    </section>
 </section>

@@ -3,16 +3,27 @@
     ViewData["Title"] = "Banking API demo";
 }
 
-<section class="hero">
-    <p class="eyebrow">.NET 10 banking API</p>
-    <h1>A small banking application with real backend rules.</h1>
-    <p>Register, sign in, and view the accounts available to your Identity user.</p>
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <a class="button" asp-page="/Accounts/Index">View my accounts</a>
-    }
-    else
-    {
-        <a class="button" asp-page="/Register">Create an account</a>
-    }
+<section class="hero" aria-labelledby="home-title">
+    <div>
+        <p class="eyebrow">Personal banking, simplified</p>
+        <h1 id="home-title">Everyday banking with clear, dependable controls.</h1>
+        <p>Manage your accounts, move money securely, and review every transaction in one place.</p>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="button" asp-page="/Accounts/Index">Go to my accounts</a>
+        }
+        else
+        {
+            <a class="button" asp-page="/Register">Open an account</a>
+            <a class="text-action" asp-page="/Login">Sign in</a>
+        }
+    </div>
+    <aside class="hero-summary" aria-label="Banking app features">
+        <p class="hero-summary-label">Your banking hub</p>
+        <ul class="check-list">
+            <li>Account balances at a glance</li>
+            <li>Secure transfers between accounts</li>
+            <li>Clear transaction history</li>
+        </ul>
+    </aside>
 </section>
