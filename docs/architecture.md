@@ -39,3 +39,5 @@ Razor Pages render the browser workflow and use normal anti-forgery-protected fo
 ## Error and operational conventions
 
 The API uses built-in `ILogger` and ASP.NET Core Problem Details. Validation, missing resources, insufficient funds, unauthenticated requests, and forbidden requests use `application/problem+json` with a trace ID. GitHub Actions restores, builds, verifies formatting, tests, audits dependencies, builds the container, and stores coverage as an artifact without enforcing an artificial percentage target.
+
+For the portfolio deployment, Azure Container Apps runs the existing Linux container while Azure SQL Database stores application data. Data Protection keys are persisted through `BankContext` in non-development environments, so cookie sessions survive container restarts and scale-to-zero. Migrations remain an explicit release step rather than an application-startup side effect in production.

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using web_app_Csharp.Data;
 using web_app_Csharp.Features.Accounts;
@@ -28,5 +29,19 @@ public sealed class BankContextModelTests
             account.GetIndexes(),
             index => index.Properties.Count == 1
                      && index.Properties[0].Name == nameof(BankAccount.OwnerId));
+    }
+
+    [Fact]
+    public void Model_DataProtectionKeys_UsesExpectedSqlServerMapping()
+    {
+        var options = new DbContextOptionsBuilder<BankContext>()
+            .UseSqlServer("Server=localhost;Database=ModelTest;Integrated Security=True")
+            .Options;
+
+        using var context = new BankContext(options);
+
+        var keys = context.Model.FindEntityType(typeof(DataProtectionKey));
+        Assert.NotNull(keys);
+        Assert.Equal("DataProtectionKeys", keys.GetTableName());
     }
 }

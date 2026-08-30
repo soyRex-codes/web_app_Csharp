@@ -1,0 +1,94 @@
+name: Deploy portfolio demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy the published image to the configured Azure Container App
+        required: true
+        default: false
+        type: boolean
+  workflow_run:
+    workflows: [".NET CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+env:
+  IMAGE_REPOSITORY: ghcr.io/soyrex-codes/bankingapp
+
+jobs:
+  publish-image:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && vars.AZURE_CONTAINER_APP_NAME != '')
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.image.outputs.reference }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select image tag
+        id: image
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            commit="${{ github.event.workflow_run.head_sha }}"
+          else
+            commit="$GITHUB_SHA"
+          fi
+
+          echo "reference=${IMAGE_REPOSITORY}:${commit}" >> "$GITHUB_OUTPUT"
+
+      - name: Sign in to GitHub Container Registry
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Build and publish container image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --file web_app_Csharp/Dockerfile \
+            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --tag "${{ steps.image.outputs.reference }}" \
+            --push \
+            .
+
+  deploy:
+    if: >-
+      ((github.event_name == 'workflow_dispatch' && inputs.deploy) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')) &&
+      vars.AZURE_CLIENT_ID != '' &&
+      vars.AZURE_TENANT_ID != '' &&
+      vars.AZURE_SUBSCRIPTION_ID != '' &&
+      vars.AZURE_RESOURCE_GROUP != '' &&
+      vars.AZURE_CONTAINER_APP_NAME != ''
+    needs: publish-image
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Sign in to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Update Azure Container App
+        env:
+          AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME }}
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          IMAGE: ${{ needs.publish-image.outputs.image }}
+        run: |
+          az extension add --name containerapp --upgrade --yes
+          az containerapp update \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --image "$IMAGE"
